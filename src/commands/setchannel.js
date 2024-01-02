@@ -5,7 +5,7 @@ const { Permissions, PermissionsBitField  } = require('discord.js');
 // Define the setchannel command
 module.exports = {
     name: 'setchannel',
-    description: 'Set the channel for NFT updates',
+    description: 'Set the channel for Nyano updates',
     // Include the config object as a parameter ?
     async execute(message, args, client, config) {
         console.log(`Received message: ${message.content}`);
@@ -43,7 +43,7 @@ module.exports = {
                     // fs.writeFileSync('src/data/channelId.txt', JSON.stringify(channelToUpdate));
             
                     // Inform the user
-                    await message.channel.send(`NFT updates will be sent to ${mentionedChannel}`);
+                    await message.channel.send(`Nyano updates will be sent to ${mentionedChannel}`);
                 } else {
                     await message.channel.send('Invalid channel ID. Please provide a valid channel ID.');
                 }

@@ -3,6 +3,8 @@ const { Client, GatewayIntentBits, EmbedBuilder  } = require('discord.js');
 const axios = require('axios')
 const fs = require('fs');
 const config = require('./config.json');
+
+// const fetch = require('node-fetch'); -- changed for "get"
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -25,7 +27,6 @@ if (!config || !config.apiUrl || !config.token) {
     return;
 }
 lastProcessedIds = []; // global variable
-
 // Fetch api data
 const fetchApiData = async () => {
     try {
@@ -54,6 +55,7 @@ async function postNewSales(){
     console.log({ channelsToUpdates });
 
     try {
+    
         // Ensure that config object is defined
         if (!config || !config.apiUrl) {
             console.error('Missing or invalid configuration. Please check your config.json file.');
@@ -64,6 +66,7 @@ async function postNewSales(){
         const apiData = await fetchApiData();
 
         // Fetches last processed _id from lastProcessedIds.txt
+        // let lastProcessedIds = getLastProcessedIds(processedIdsFilePath);
         console.log(lastProcessedIds);
 
 
@@ -81,22 +84,25 @@ async function postNewSales(){
                 const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
                 const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
                 const exampleEmbed = new EmbedBuilder()
-                    .setColor(0x0099FF)
-                    .setTitle(`**${saleElement.assetId.name} has been sold for ${+saleElement.price} ${saleElement.priceTicker}!**`)
-                    .setURL(link)
-                    // .setThumbnail(saleElement.assetId.location)
-                    .setImage('attachment://' + imageName)
-                    .setDescription(`**See the full Nyano Collection [here](https://nanswap.com/art)!**`) 
-                    .addFields(
-                        { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
-                        { name: '**From:**', value: fromUsername, inline: true },
-                        { name: '**To:**', value: toUsername, inline: true },
-                        // { name: 'Type', value: saleElement.type, inline: true},
-                        // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
-                        { name: '**Link:**', value: `[Click To View](${link})`, inline: true}, 
+                .setColor(0x0099FF)
+                .setTitle(`${saleElement.assetId.name}`)
+                .setDescription('See the full Nyano Collection [here](https://nanswap.com/art)!')
+                .setURL(link)
+                // .setThumbnail(saleElement.assetId.location)
+                .setImage('attachment://' + imageName)
+                // .setDescription('**A New Nyano Cat has been sold!**') // too much info i think, we could even just remove the "type" fiel, like in any case, it is always a "sale"
+                .addFields(
+                    { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
+                    { name: '**From:**', value: fromUsername, inline: true },
+                    { name: '**To:**', value: toUsername, inline: true },
+                    // { name: 'Type', value: saleElement.type, inline: true},
+                    // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
+                    { name: '**Link:**', value: `[View Here](${link})`, inline: true}, // I'm just being picky lol
+
+                    
                     )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL:  'https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless', url: 'https://discord.js.org' })
-                    .setTimestamp();
+                    .setTimestamp()
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
                     const channelIdToUpdate = channelsToUpdates[i].channelId
@@ -109,19 +115,12 @@ async function postNewSales(){
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = roleId !== null ? `<@&${roleId}>` : ''
 
-                    
-                    
-                    await channel.send( `${mention}`)
-                    const message =
+
+                    await channel.send( `${mention} **A Nyano Cat has been sold for ${+saleElement.price} ${saleElement.priceTicker}!**`)
                     await channel.send({ embeds: [exampleEmbed], files: [{attachment: imageName }]});
-                    message;
-                    // const message = await channel.send(`${mention} **${saleElement.assetId.name} has been sold for ${+saleElement.price} ${saleElement.priceTicker}!**`, { embeds: [exampleEmbed], files: [{ attachment: imageName }] });
-                    await message.react('🚀');  // Rocket
-                    await message.react('👍');  // Thumbs up
-                    
-                    await message.react('🔥');  // Fire
-                    await message.react('🥳');  // Partying face
-                    lastProcessedIds.push(saleElement._id)
+
+                lastProcessedIds.push(saleElement._id)
+
                 }
             }
 

@@ -37,7 +37,14 @@ function setRoleId(filePath, guildId, roleId) {
     }
 }
 
+function resolveRoleMention(mention, guild) {
+    const matches = mention.match(/^<@&(\d+)>$/);
+    if (!matches) return null;
 
+    const roleId = matches[1];
+    const role = guild.roles.cache.get(roleId);
+    return role ? role.id : null;
+}
 
 function getChannelToUpdate(filePath) {
     // I think there is an issue =- I will check 
@@ -241,6 +248,7 @@ module.exports = {
     readChannelFile: readChannelFile,
     getRoleId: getRoleId,
     setRoleId: setRoleId,
+    resolveRoleMention: resolveRoleMention,
 }
 // module.exports = getChannelToUpdate;
 // module.exports = setChannelToUpdate;
