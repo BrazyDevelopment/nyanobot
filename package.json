@@ -1,0 +1,15 @@
+{
+  "name": "nyanobot",
+  "version": "1.0.0",
+  "description": "A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is traded on Nanswap!",
+  "main": "src/nft_bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.3",
+    "discord.js": "^14.14.1"
+  }
+}
