@@ -133,10 +133,6 @@ async function postNewSales(){
                     // await channel.send( `${mention}`)
                     await channel.send({ content: `${mention}`, embeds: [exampleEmbed], files: [{attachment: imageName }]});
 
-                lastProcessedIds.push(saleElement._id)
-
-                    await channel.send( `${mention}`)
-                    await channel.send({ embeds: [exampleEmbed], files: [{attachment: imageName }]});
                     lastProcessedIds.push(saleElement._id)
                 }
             }
