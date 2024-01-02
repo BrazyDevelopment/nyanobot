@@ -82,6 +82,8 @@ async function postNewSales(){
                 // const imageName = '1.png'; // using the asset name to not confound the same image  good idea
                 let link = 'https://nanswap.com/art/assets/' + saleElement.assetId.id
                 console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`) // try now
+                const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
+                const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
                 const exampleEmbed = new EmbedBuilder()
                 .setColor(0x0099FF)
                 .setTitle(`${saleElement.assetId.name}`)
@@ -91,8 +93,8 @@ async function postNewSales(){
                 // .setDescription('**A New Nyano Cat has been sold!**') // too much info i think, we could even just remove the "type" fiel, like in any case, it is always a "sale"
                 .addFields(
                     { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
-                    { name: '**From:**', value: saleElement.fromUserId.username, inline: true },
-                    { name: '**To:**', value: saleElement.toUserId.username, inline: true },
+                    { name: '**From:**', value: fromUsername, inline: true },
+                    { name: '**To:**', value: toUsername, inline: true },
                     // { name: 'Type', value: saleElement.type, inline: true},
                     // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
                     { name: '**Link:**', value: `[${saleElement.assetId.name}](${link})`, inline: true}, // I'm just being picky lol
@@ -112,6 +114,8 @@ async function postNewSales(){
                     console.log('Fetching channel ID from file:', channelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = roleId !== null ? `<@&${roleId}>` : ''
+
+
                     await channel.send( `${mention} **${saleElement.assetId.name} has been sold for ${+saleElement.price} ${saleElement.priceTicker}!**`)
                     await channel.send({ embeds: [exampleEmbed], files: [{attachment: imageName }]});
 
