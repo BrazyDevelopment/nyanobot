@@ -230,6 +230,15 @@ function writeChannelFile(filePath, channels) {
     fs.writeFileSync(filePath, JSON.stringify(channels), null, 2);
 }
 
+function resolveRoleMention(mention, guild) {
+    const matches = mention.match(/^<@&(\d+)>$/);
+    if (!matches) return null;
+
+    const roleId = matches[1];
+    const role = guild.roles.cache.get(roleId);
+    return role ? role.id : null;
+}
+
 // exports
 module.exports = {
     getChannelToUpdate: getChannelToUpdate,
@@ -241,6 +250,7 @@ module.exports = {
     readChannelFile: readChannelFile,
     getRoleId: getRoleId,
     setRoleId: setRoleId,
+    resolveRoleMention: resolveRoleMention,
 }
 // module.exports = getChannelToUpdate;
 // module.exports = setChannelToUpdate;

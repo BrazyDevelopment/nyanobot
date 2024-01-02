@@ -1,7 +1,7 @@
 // setrole.js
 const { Permissions, PermissionsBitField  } = require('discord.js');
 const fs = require('fs');
-const { setRoleId, getRoleId } = require('../utils.js'); // Import the necessary functions from utils.js
+const { setRoleId, resolveRoleMention } = require('../utils.js')
 
 module.exports = {
     name: 'setrole',
@@ -20,7 +20,7 @@ module.exports = {
                     return;
                 }
 
-                const roleId = split[1];
+                const roleId = resolveRoleMention(split[1], message.guild);
 
                 // Update the role ID in the file
                 setRoleId('src/data/roleIds.txt', message.guild.id, roleId);
