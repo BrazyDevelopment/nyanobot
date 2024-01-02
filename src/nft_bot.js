@@ -127,7 +127,7 @@ async function postNewSales(){
 
 client.on("ready", async () => {
     console.log("bot ready")
-    await postNewSales();
+    // await postNewSales();
     console.log(`Logged in as ${client.user.tag}`);
     //     // Set status after the bot is ready
     //     client.user.setActivity({
@@ -138,7 +138,7 @@ client.on("ready", async () => {
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
-    initialIds = [] //for testing
+    // initialIds = [] //for testing
     // console.log(initialIds);
     initialIds = [] // uncomment for testing
     // console.log(initialIds);
