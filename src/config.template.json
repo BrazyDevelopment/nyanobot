@@ -1,0 +1,6 @@
+{
+    "prefix": "!",
+    "apiUrl": "https://example.com/api",
+    "token": "YOUR_BOT_TOKEN_HERE",
+    "updateInterval": 60000
+}
