@@ -131,10 +131,10 @@ client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}`);
     //     // Set status after the bot is ready
     //     client.user.setActivity({
-    //         activities: ['!setchannel & !setrole', { type: ActivityType.Watching }],
-    //         status: 'dnd',
-    //     });
+//     activities: [{ name: '!setchannel & !setrole', type: ActivityType.Watching }],
+//     status: 'dnd',
 });
+
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
