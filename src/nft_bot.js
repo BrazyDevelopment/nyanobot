@@ -1,10 +1,8 @@
-const { getChannelToUpdate, getRoleId, getLastProcessedIds, setLastProcessedIds, updateNFTs } = require('./utils.js');
-const { Client, GatewayIntentBits, EmbedBuilder  } = require('discord.js');
+const { getChannelToUpdate, getRoleId} = require('./utils.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType  } = require('discord.js');
 const axios = require('axios')
 const fs = require('fs');
 const config = require('./config.json');
-
-// const fetch = require('node-fetch'); -- changed for "get"
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -13,7 +11,7 @@ const client = new Client({
         GatewayIntentBits.GuildMessageReactions
     ],
 });
-        
+
 // Read last processed ID from file
 const processedIdsFilePath = 'src/data/lastProcessedIds.txt'
 // Load the channel ID from the file if it exists
@@ -53,9 +51,7 @@ async function postNewSales(){
 // Fetch the channel ID from the file
     let channelsToUpdates = getChannelToUpdate(channelIdPath);
     console.log({ channelsToUpdates });
-
     try {
-    
         // Ensure that config object is defined
         if (!config || !config.apiUrl) {
             console.error('Missing or invalid configuration. Please check your config.json file.');
@@ -66,9 +62,7 @@ async function postNewSales(){
         const apiData = await fetchApiData();
 
         // Fetches last processed _id from lastProcessedIds.txt
-        // let lastProcessedIds = getLastProcessedIds(processedIdsFilePath);
-        console.log(lastProcessedIds);
-
+        // console.log(lastProcessedIds);
 
         // Extract unique asset IDs from the API data
         for (let i = 0; i < apiData.length; i++) {
@@ -76,31 +70,32 @@ async function postNewSales(){
             const saleElement = apiData[i];
             if (!lastProcessedIds.includes(saleElement._id)){ // we check if new _id is not included in lastProcessedIds
                 const imageUrl = saleElement.assetId.location;
-                const imageName = saleElement.assetId.name.replace(' ', '').replace('#', '-') + '.png'; // using the asset name to not confound the same image  good idea
+                const imageName = saleElement.assetId.name.replace(' ', '').replace('#', '-') + '.png'; // using the asset name to not confound the same image
+                
                 await downloadAndSaveImage(imageUrl, imageName);
-                // const imageName = '1.png'; // using the asset name to not confound the same image  good idea
+
+
                 let link = 'https://nanswap.com/art/assets/' + saleElement.assetId.id
-                console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`) // try now
+                // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
                 const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
-                const exampleEmbed = new EmbedBuilder()
-                .setColor(0x0099FF)
-                .setTitle(`**A Nyano Cat has been sold!**`)
-                .setDescription(`See the full Nyano Collection [here](https://nanswap.com/art)!`)
-                .setURL(link)
-                .setThumbnail('https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless')
-                .setImage('attachment://' + imageName)
-                .addFields(
-                    { name: '**Name: **', value: `${saleElement.assetId.name}`, inline: true}, 
-                    { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
-                    { name: '**From:**', value: `[${fromUsername}](https://nanswap.com/art/` + `${fromUsername})`, inline: true },
-                    { name: '**To:**', value: `[${toUsername}](https://nanswap.com/art/` + `${toUsername})`, inline: true },
-                    // { name: 'Type', value: saleElement.type, inline: true},
-                    // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
-                    { name: '**Link:**', value: `[View Here](${link})`, inline: true}, 
 
-                    
-                    )
+                const exampleEmbed = new EmbedBuilder()
+                    .setColor(0x0099FF)
+                    .setTitle(`**A Nyano Cat has been sold!**`)
+                    .setDescription(`See the full Nyano Collection [here](https://nanswap.com/art)!`)
+                    .setURL(link)
+                    .setThumbnail('https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless')
+                    .setImage('attachment://' + imageName)
+                    .addFields(
+                        { name: '**Name: **', value: `${saleElement.assetId.name}`, inline: true}, 
+                        { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
+                        { name: '**From:**', value: `[${fromUsername}](https://nanswap.com/art/` + `${fromUsername})`, inline: true },
+                        { name: '**To:**', value: `[${toUsername}](https://nanswap.com/art/` + `${toUsername})`, inline: true },
+                        // { name: 'Type', value: saleElement.type, inline: true},
+                        // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
+                        { name: '**Link:**', value: `[View Here](${link})`, inline: true})
+                        
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL:  'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp()
 
@@ -109,23 +104,17 @@ async function postNewSales(){
                     const guildid = channelsToUpdates[i].guildId
                     const roleId = getRoleId('src/data/roleIds.txt', guildid); 
 
-
                     console.log('Channel to update:', channelsToUpdates[i]);
                     console.log('Fetching channel ID from file:', channelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = roleId !== null ? `<@&${roleId}>` : ''
 
-
                     await channel.send( `${mention}`)
                     await channel.send({ embeds: [exampleEmbed], files: [{attachment: imageName }]});
-
-                lastProcessedIds.push(saleElement._id)
-
+                    lastProcessedIds.push(saleElement._id)
                 }
             }
-
         }
-
     } catch (error) {
         console.error('Error fetching guild or channel:', error);
     }
@@ -134,13 +123,18 @@ async function postNewSales(){
 client.on("ready", async () => {
     console.log("bot ready")
     // await postNewSales();
-    
+    console.log(`Logged in as ${client.user.tag}`);
+    //     // Set status after the bot is ready
+    //     client.user.setActivity({
+    //         activities: ['!setchannel & !setrole', { type: ActivityType.Watching }],
+    //         status: 'dnd',
+    //     });
 });
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
-    // initialIds = [] //for testing
-    console.log(initialIds);
+    // initialIds = [] // uncomment for testing
+    // console.log(initialIds);
     lastProcessedIds = initialIds;
 
 })();
@@ -164,7 +158,7 @@ for (const file of commandFiles) {
 
 client.on('messageCreate', async (message) => {
     try {
-        console.log('Received message:', message.content);
+        // console.log('Received message:', message.content);
 
         // Check if the message starts with the bot's prefix and is not sent by another bot
         if (!message.content.startsWith(config.prefix) || message.author.bot) return;
@@ -173,14 +167,14 @@ client.on('messageCreate', async (message) => {
         const args = message.content.slice(config.prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
 
-        console.log('Command name:', commandName);
+        // console.log('Command name:', commandName);
 
         // Check if the command exists in the commands Map
         if (!client.commands.has(commandName)) return;
 
         // Execute the command
         const command = client.commands.get(commandName);
-        console.log('Executing command:', command.name);
+        // console.log('Executing command:', command.name);
         command.execute(message, args, client, config);
     } catch (error) {
         console.error(error);

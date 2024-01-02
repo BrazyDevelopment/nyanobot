@@ -1,4 +1,3 @@
-const fs = require('fs');
 const {setChannelToUpdate}  = require('../utils.js'); // ignore 
 const { Permissions, PermissionsBitField  } = require('discord.js');
 
@@ -15,17 +14,15 @@ module.exports = {
         // Check if the message starts with the correct command
         if (message.content.startsWith(config.prefix + 'setchannel')) {
 
+            
             console.log(`${__dirname}`)
             // Check if the user has the required permissions
-            // if (message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)){
-            if (true){
-                // Prompt the user for a channel ID
-                // message.channel.send('Please provide the channel ID where you want to receive NFT updates.');
-                
-                // const channelId = response.content.trim();
-                const split = message.content.split(' ')
-                if (split[1] === undefined){
-                    await message.channel.send(`Please provide a channel id`)
+            if (message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)){
+                // if (true){
+                    // Prompt the user for a channel ID
+                    const split = message.content.split(' ')
+                    if (split[1] === undefined){
+                    await message.channel.send('Please follow the instructions carefully.\n\nFirst perform the command **`!setchannel <ChannelID>`** - remove the **`< >`** and input your Channel ID.\n\nYou can retrieve this by turning Discord Developer Mode on and right-clicking your chosen channel and selecting **"Copy Channel ID"**.')
                     return
                 }
                 const channelId = split[1];
@@ -40,24 +37,20 @@ module.exports = {
                     
                     // Update the channel info in the file
                     setChannelToUpdate('src/data/channelId.txt', guildId, channelToUpdate)
-                    // fs.writeFileSync('src/data/channelId.txt', JSON.stringify(channelToUpdate));
-            
+                    fs.writeFileSync('src/data/channelId.txt', JSON.stringify(channelToUpdate));
+             
                     // Inform the user
                     await message.channel.send(`Nyano updates will be sent to ${mentionedChannel}`);
+                    await message.channel.send('Next you need to perform the `!setrole <roleID>` command. You can just mention the role instead if you like.');
                 } else {
                     await message.channel.send('Invalid channel ID. Please provide a valid channel ID.');
                 }
 
-                // Handle the collected messages
-                 
-                
-    
-                
                 // collector.stop();
-           
+                
             } else {
-                // Inform the user about insufficient permissions
                 message.channel.send('You do not have the required permissions.');
+                // Inform the user about insufficient permissions
             }
         }
     },

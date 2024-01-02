@@ -1,6 +1,6 @@
 {
     "prefix": "!",
-    "apiUrl": "https://example.com/api",
+    "apiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=sales",
     "token": "YOUR_BOT_TOKEN_HERE",
     "updateInterval": 60000
 }
