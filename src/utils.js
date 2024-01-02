@@ -42,8 +42,10 @@ function resolveRoleMention(mention, guild) {
 
     const roleId = matches[1];
     const role = guild.roles.cache.get(roleId);
+
     return role ? role.id : null;
 }
+
 
 function getChannelToUpdate(filePath) {
     try {
