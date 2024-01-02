@@ -1,2 +1,3 @@
 config.json
 *.png
+/node_modules

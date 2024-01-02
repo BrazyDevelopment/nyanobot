@@ -1,0 +1,99 @@
+[33mcommit f70dcd59a747b08b683031075e0c799403b0b76b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 15:15:25 2024 +0000
+
+    Consolidated code, cleaned up and optimised.
+
+[33mcommit ae5067f7b89092e0063bfed10740c3f005486dad[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 13:16:38 2024 +0000
+
+    Full Final Version 1.0.0
+
+[33mcommit 86a34fdc60c613213d61511132f0f74f91473858[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 11:52:18 2024 +0000
+
+    Final commit (hopefully lol)
+
+[33mcommit e28eccf44369408ede720727bb59eca9b2e06faa[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 10:19:17 2024 +0000
+
+    Bug fixes
+
+[33mcommit 8314062de81871a280533a4c2198e78959173af1[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 10:04:40 2024 +0000
+
+    Added message reacts and made some embed edits
+
+[33mcommit 5e650a85211747a31d60442771656157c42b111e[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:39:09 2024 +0000
+
+    Fixed an bug in nft_bot.js which was causing hang when user was 'Unnamed'.
+
+[33mcommit 0815bd46bb783cc4b6fd2241b5678d31a17d1488[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:16:13 2024 +0000
+
+    Update README to add image
+
+[33mcommit 086d22bb648f7bdbfbded2015caad42ab1519d69[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:10:43 2024 +0000
+
+    Update README to include config.template instructions
+
+[33mcommit a0631fde3c76715a713ab4878f859a2f8dbdf17a[m
+Merge: a8a9855 3cc8fc4
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:08:01 2024 +0000
+
+    Merge branch 'main' of https://github.com/BrazyDevelopment/nyanobot
+
+[33mcommit a8a98550424b5d351867ee96ca7baebc84b9392a[m
+Merge: 2afba0b 496a080
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:07:38 2024 +0000
+
+    Resolve merge conflicts
+
+[33mcommit 3cc8fc4803ab2f2750890e4c800c91ebfb76cb15[m
+Author: Brazy <126255356+BrazyDevelopment@users.noreply.github.com>
+Date:   Tue Jan 2 09:06:29 2024 +0000
+
+    Update README.md
+
+[33mcommit 2afba0b294d25b6fb6f658086f5ca2870fbcbba6[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:04:49 2024 +0000
+
+    Merge remote changes
+
+[33mcommit 7b270b492d762392b9c2f2d5d14bf15d55713f57[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 09:02:52 2024 +0000
+
+    Added config.template.json - make sure to rename to config.json on install
+
+[33mcommit 496a0803fd61baf4d5ae4e8f976a243d1a7fbf4e[m
+Author: Brazy <126255356+BrazyDevelopment@users.noreply.github.com>
+Date:   Tue Jan 2 08:57:21 2024 +0000
+
+    Update README.md
+    
+    Added invite link and install instructions.
+
+[33mcommit e8f22ff0ed78cc263dffbf13d7fd56425afc7c93[m
+Author: BrazyDevelopment <lee@lsments.com>
+Date:   Tue Jan 2 08:40:34 2024 +0000
+
+    Initial Commit
+
+[33mcommit b909f85ecd09445c5ac47d98c241f986de02c5c2[m
+Author: Brazy <126255356+BrazyDevelopment@users.noreply.github.com>
+Date:   Tue Jan 2 05:44:09 2024 +0000
+
+    Initial commit

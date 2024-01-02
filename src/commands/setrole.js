@@ -1,7 +1,7 @@
 // setrole.js
 const { Permissions, PermissionsBitField  } = require('discord.js');
 const fs = require('fs');
-const { setRoleId, getRoleId, resolveRoleMention } = require('../utils.js'); // Import the necessary functions from utils.js
+const { setRoleId, resolveRoleMention } = require('../utils.js')
 
 module.exports = {
     name: 'setrole',
@@ -21,11 +21,6 @@ module.exports = {
                 }
 
                 const roleId = resolveRoleMention(split[1], message.guild);
-
-                if (!roleId) {
-                    await message.channel.send(`Invalid role id or mention`);
-                    return;
-                }
 
                 // Update the role ID in the file
                 setRoleId('src/data/roleIds.txt', message.guild.id, roleId);

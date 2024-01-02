@@ -79,8 +79,28 @@ async function postNewSales(){
                 // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
                 const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
+                let fromuserLink = 'https://nanswap.com/art/' + saleElement.fromUserId.username
+                let touserLink = 'https://nanswap.com/art/' + saleElement.toUserId.username
 
                 const exampleEmbed = new EmbedBuilder()
+                .setColor(0x0099FF)
+                .setTitle(`NYANO TRADE ALERT!`)
+                .setDescription(`**${saleElement.assetId.name} has been sold!**`)
+                .setURL(link)
+                .setThumbnail('https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless')
+                .setImage('attachment://' + imageName)
+                // .setDescription('**A New Nyano Cat has been sold!**') // too much info i think, we could even just remove the "type" fiel, like in any case, it is always a "sale"
+                .addFields(
+                    { name: '__Seller:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
+                    { name: '__Buyer:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
+                    // { name: 'Type', value: saleElement.type, inline: true},
+                    // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
+                    { name: '__Link:__', value: `**[Click To View](${link})**`, inline: true}, // I'm just being picky lol
+                    { name: '__Price:__', value: `**${+saleElement.price} ${saleElement.priceTicker}**`, inline: true}, 
+
+                    
+                    )
+                    .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL:  'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setColor(0x0099FF)
                     .setTitle(`**A Nyano Cat has been sold!**`)
                     .setDescription(`See the full Nyano Collection [here](https://nanswap.com/art)!`)
@@ -109,6 +129,12 @@ async function postNewSales(){
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = roleId !== null ? `<@&${roleId}>` : ''
 
+
+                    // await channel.send( `${mention}`)
+                    await channel.send({ content: `${mention}`, embeds: [exampleEmbed], files: [{attachment: imageName }]});
+
+                lastProcessedIds.push(saleElement._id)
+
                     await channel.send( `${mention}`)
                     await channel.send({ embeds: [exampleEmbed], files: [{attachment: imageName }]});
                     lastProcessedIds.push(saleElement._id)
@@ -133,6 +159,8 @@ client.on("ready", async () => {
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
+    // initialIds = [] //for testing
+    // console.log(initialIds);
     // initialIds = [] // uncomment for testing
     // console.log(initialIds);
     lastProcessedIds = initialIds;
