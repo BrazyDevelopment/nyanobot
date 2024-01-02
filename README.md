@@ -7,3 +7,5 @@ https://nyanobot.armour.dev/invite
 Simply use `!setchannel <channelid>` and `!setrole <roleid>` respectively and you're good to go! 
 
 If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` for production.
+
+![Logo](https://media.discordapp.net/attachments/904261276899880970/1191611383624777750/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a61194&is=65939c94&hm=9ec3b2e0b6da147c1bcbc7e74e5c07ebbd82a845bafd4f1c8ea0bde6b4541138&=&format=webp&quality=lossless)
