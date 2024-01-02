@@ -86,14 +86,14 @@ async function postNewSales(){
                     .setURL(link)
                     // .setThumbnail(saleElement.assetId.location)
                     .setImage('attachment://' + imageName)
-                    .setDescription(`**See the full Nyano Collection [here](https://nanswap.com/art!**`) 
+                    .setDescription(`**See the full Nyano Collection [here](https://nanswap.com/art)!**`) 
                     .addFields(
                         { name: '**Price:**', value: `${+saleElement.price} ${saleElement.priceTicker}`, inline: false}, 
                         { name: '**From:**', value: fromUsername, inline: true },
                         { name: '**To:**', value: toUsername, inline: true },
                         // { name: 'Type', value: saleElement.type, inline: true},
                         // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
-                        { name: '**Link:**', value: `[${saleElement.assetId.name}](${link})`, inline: true}, 
+                        { name: '**Link:**', value: `[Click To View](${link})`, inline: true}, 
                     )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL:  'https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless', url: 'https://discord.js.org' })
                     .setTimestamp();
@@ -118,7 +118,7 @@ async function postNewSales(){
                     // const message = await channel.send(`${mention} **${saleElement.assetId.name} has been sold for ${+saleElement.price} ${saleElement.priceTicker}!**`, { embeds: [exampleEmbed], files: [{ attachment: imageName }] });
                     await message.react('🚀');  // Rocket
                     await message.react('👍');  // Thumbs up
-                    await message.react(':nyanocathead');  // Crossed fingers
+                    
                     await message.react('🔥');  // Fire
                     await message.react('🥳');  // Partying face
                     lastProcessedIds.push(saleElement._id)
