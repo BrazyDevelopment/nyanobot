@@ -1,5 +1,5 @@
 config.json
 *.png
 /node_modules
-*.txt
 logs
+src/data
