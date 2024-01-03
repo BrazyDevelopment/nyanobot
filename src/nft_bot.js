@@ -85,7 +85,7 @@ async function postNewSales(){
                 const exampleEmbed = new EmbedBuilder()
                 .setColor(0x0099FF)
                 .setTitle(`NYANO TRADE ALERT!`)
-                .setDescription(`**See the full Nyano Collection [here](https://nanswap.com/art)!**`)
+                .setDescription(`**See the full [Nyano Collection](https://nanswap.com/art)!**`)
                 .setURL(link)
                 .setThumbnail('https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless')
                 .setImage('attachment://' + imageName)
@@ -94,7 +94,7 @@ async function postNewSales(){
                     { name: '__Buyer:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
                     // { name: 'Type', value: saleElement.type, inline: true},
                     // { name: '**Sold At:**', value: new Date(saleElement.createdAt).toLocaleString(), inline: true},
-                    { name: '__Link:__', value: `**[${saleElement.assetId.name}](${link})**`, inline: false}, 
+                    { name: '__File:__', value: `**[${saleElement.assetId.name}](${link})**`, inline: false}, 
                     { name: '__Price:__', value: `**${+saleElement.price} ${saleElement.priceTicker}**`, inline: true}, 
 
                     
@@ -139,8 +139,6 @@ client.on("ready", async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
     // initialIds = [] //for testing
-    // console.log(initialIds);
-    initialIds = [] // uncomment for testing
     // console.log(initialIds);
     lastProcessedIds = initialIds;
 
