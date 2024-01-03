@@ -87,7 +87,7 @@ async function postNewSales(){
                 .setTitle(`NYANO TRADE ALERT!`)
                 .setDescription(`**See the full [Nyano Collection](https://nanswap.com/art)!**`)
                 .setURL(link)
-                .setThumbnail('https://media.discordapp.net/attachments/1189715753038000218/1191601666194161684/favicon.png?ex=65a60888&is=65939388&hm=9cd9d83645cae6172c44071d27ae56bedc0cdb20a562f9508206106f4a8a737b&=&format=webp&quality=lossless')
+                .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
                 .setImage('attachment://' + imageName)
                 .addFields(
                     { name: '__Seller:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
@@ -127,7 +127,7 @@ async function postNewSales(){
 
 client.on("ready", async () => {
     console.log("bot ready")
-    // await postNewSales();
+    await postNewSales();
     console.log(`Logged in as ${client.user.tag}`);
     //     // Set status after the bot is ready
     //     client.user.setActivity({
@@ -138,7 +138,7 @@ client.on("ready", async () => {
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
-    // initialIds = [] //for testing
+    initialIds = [] //for testing
     // console.log(initialIds);
     lastProcessedIds = initialIds;
 
