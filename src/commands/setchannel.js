@@ -1,5 +1,6 @@
 const {setChannelToUpdate}  = require('../utils.js'); // ignore 
 const { Permissions, PermissionsBitField  } = require('discord.js');
+// const fs = require('fs');
 
 // Define the setchannel command
 module.exports = {
@@ -37,7 +38,7 @@ module.exports = {
                     
                     // Update the channel info in the file
                     setChannelToUpdate('src/data/channelId.txt', guildId, channelToUpdate)
-                    fs.writeFileSync('src/data/channelId.txt', JSON.stringify(channelToUpdate));
+                    // fs.writeFileSync('src/data/channelId.txt', JSON.stringify(channelToUpdate));
              
                     // Inform the user
                     await message.channel.send(`Nyano updates will be sent to ${mentionedChannel}`);
