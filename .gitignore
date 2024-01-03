@@ -1,4 +1,4 @@
 config.json
 *.png
 /node_modules
-/src/data/*.txt
+src/data/*.txt
