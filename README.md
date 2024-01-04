@@ -19,9 +19,10 @@ You can also use it in your own server and keep track of all Nyano trades by inv
 2. Ensure you have installed all of the required dependencies listed in `package.json`. This bot runs on Node JS.
 3. You do not need to build the project, this has already been done.
 4. Open the `config.template.json` and rename it to `config.json` and configure it to your needs.
-5. Create a bot token on Discord Developer Portal, give it the necessary permissions and invite it, make sure to put your token in `config.json`.
-6. Open Terminal as Administrator in your directory and run `npm install` then `node .` to start the bot.
-7. Follow the steps from Easy Installation, except Step 1.
+5. Rename the `data.template` folder to `data` and leave it alone.
+6. Create a bot token on Discord Developer Portal, give it the necessary permissions and invite it, make sure to put your token in `config.json`.
+7. Open Terminal as Administrator in your directory and run `npm install` then `node .` to start the bot.
+8. Follow the steps from Easy Installation, except Step 1.
 
 
 # Command Usage:
