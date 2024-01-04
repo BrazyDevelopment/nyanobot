@@ -1,4 +1,4 @@
-const { getChannelToUpdate, getRoleId} = require('./utils.js');
+const { getChannelToUpdate, getRoleId, readChannelFile, writeChannelFile } = require('./utils.js');
 const { Client, GatewayIntentBits, EmbedBuilder, ActivityType  } = require('discord.js');
 const axios = require('axios')
 const fs = require('fs');
@@ -127,7 +127,7 @@ async function postNewSales(){
 
 client.on("ready", async () => {
     console.log("bot ready")
-    await postNewSales();
+    // await postNewSales();
     console.log(`Logged in as ${client.user.tag}`);
     //     // Set status after the bot is ready
     //     client.user.setActivity({
@@ -135,10 +135,35 @@ client.on("ready", async () => {
 //     status: 'dnd',
 });
 
+client.on('guildDelete', (guild) => {
+    try {
+        // Remove data from channelId.txt
+        let channels = readChannelFile('src/data/channelId.txt');
+        const channelIndex = channels.findIndex(entry => entry.guildId === guild.id);
+        if (channelIndex !== -1) {
+            channels.splice(channelIndex, 1);
+            writeChannelFile('src/data/channelId.txt', channels);
+            console.log(`Removed channel data for guild: ${guild.name} (ID: ${guild.id})`);
+        }
+
+        // Remove data from roleIds.txt
+        let roles = readChannelFile('src/data/roleIds.txt');
+        const roleIndex = roles.findIndex(entry => entry.guildId === guild.id);
+        if (roleIndex !== -1) {
+            roles.splice(roleIndex, 1);
+            writeChannelFile('src/data/roleIds.txt', roles);
+            console.log(`Removed role data for guild: ${guild.name} (ID: ${guild.id})`);
+        }
+    } catch (error) {
+        console.error('Error handling guildDelete event:', error);
+    }
+});
+
+
 (async () => {
     let initialData = await fetchApiData();
      initialIds = initialData.map((elmt) => elmt._id);
-    initialIds = [] //for testing
+    // initialIds = [] //for testing
     // console.log(initialIds);
     lastProcessedIds = initialIds;
 
