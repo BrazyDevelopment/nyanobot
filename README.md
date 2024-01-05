@@ -16,6 +16,7 @@ You can also use it in your own server and keep track of all Nyano alerts by fol
     **(This now supports multiple channels and multiple roles!)**
     **(Role commands support role ID & mentions)**
 4. Wait for alerts in your chosen channels!
+5. Use the `!info <FileNumber>` command to see information about individual assets!
 
 
 **SELF INSTALLATION:**
@@ -57,6 +58,12 @@ You can also use it in your own server and keep track of all Nyano alerts by fol
     `!setalerts offers channel <channelID>`
 
     `!setalerts offers role <roleID>`
+
+
+## **Info:**
+
+    `!info <FileNumber>`
+
 
 
 # See It In Action:
