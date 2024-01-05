@@ -1,33 +1,47 @@
 # Nyano Bot
 
 # About
-Simply use `!setchannel` and follow the instructions on screen!
-A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is traded on Nanswap!
+Simply use `!setalerts` and follow the instructions on screen!
+A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is traded, bid on, listed or transferred on Nanswap!
 
-You can also use it in your own server and keep track of all Nyano trades by inviting the bot via it's invite link below.
+You can also use it in your own server and keep track of all Nyano alerts by following the **EASY INSTALLATION** below.
 
 
 **EASY INSTALLATION:**
 1. Invite the bot to your server using https://nyanobot.armour.dev/invite
-2. Perform the `!setchannel` command and follow the instructions it gives you.
-3. Perform the `!setrole` command and mention your chosen role.
-4. Wait for alerts!
+2. Perform the `!setalerts` command and follow the instructions it gives you.
+3. Perform the commands listed below under "Command Usage".
+    **(Role setting is optional, it will send without mentions.)**
+    **(You must set at least ONE alert type's channel for the bot to work (obviously))**
+    **(This now supports multiple channels and multiple roles!)**
+    **(Role commands support role ID & mentions)**
+4. Wait for alerts in your chosen channels!
 
 
 **SELF INSTALLATION:**
 1. Download the zip files using the green "Code" button above.
-2. Ensure you have installed all of the required dependencies listed in `package.json`. This bot runs on Node JS.
+2. Ensure you have installed all of the required dependencies listed in **`package.json`**. This bot runs on Node JS.
 3. You do not need to build the project, this has already been done.
-4. Open the `config.template.json` and rename it to `config.json` and configure it to your needs.
-5. Rename the `data.template` folder to `data` and leave it alone.
-6. Create a bot token on Discord Developer Portal, give it the necessary permissions and invite it, make sure to put your token in `config.json`.
-7. Open Terminal as Administrator in your directory and run `npm install` then `node .` to start the bot.
+4. Open the **`config.template.json`** and rename it to **`config.json`** and configure it to your needs.
+5. Rename the **`data.template`** folder to **`data`** and leave it alone.
+6. Create a bot token on Discord Developer Portal, give it the necessary permissions and invite it, make sure to put your token in **`config.json`**.
+7. Open Terminal as Administrator in your directory and run **`npm install`** then **`node .`** to start the bot.
 8. Follow the steps from Easy Installation, except Step 1.
 
 
 # Command Usage:
-Set the channel you want the bot to post in: `!setchannel <channelid>` 
-Set the role you would like to be alerted: `!setrole <roleid>`
+
+1.   **Sales:**
+    `!setalerts sales channel <channelID>`
+    `!setalerts sales role <roleID>`
+
+2.   **Listings:**
+    `!setalerts listings channel <channelID>`
+    `!setalerts listings role <roleID>`
+
+3.   **Transfers:**
+    `!setalerts transfers channel <channelID>`
+    `!setalerts transfers role <roleID>`
 
 
 # See It In Action:
@@ -35,7 +49,7 @@ You can see the bot in action in the Nyano Cats Discord server here: https://dis
 
 
 # IMPORTANT:
-If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` for production.
+If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` for production. Do the same with the `data.template` directory.
 
 
 # Preview:
