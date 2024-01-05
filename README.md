@@ -43,6 +43,10 @@ You can also use it in your own server and keep track of all Nyano alerts by fol
     `!setalerts transfers channel <channelID>`
     `!setalerts transfers role <roleID>`
 
+    **Offers:**
+    `!setalerts offers channel <channelID>`
+    `!setalerts offers role <roleID>`
+
 
 # See It In Action:
 You can see the bot in action in the Nyano Cats Discord server here: https://discord.gg/nyano
