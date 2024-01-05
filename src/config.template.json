@@ -1,6 +1,8 @@
 {
     "prefix": "!",
-    "apiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=sales",
-    "token": "YOUR_BOT_TOKEN_HERE",
-    "updateInterval": 60000
+    "salesApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=sales",
+    "transfersApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=transfer",
+    "listingsApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=listing",
+    "offersApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=offer",
+    "updateInterval": 30000
 }

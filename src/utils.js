@@ -1,6 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
 const axios = require('axios');
-const config = require('./config.json');
 const fs = require('fs');
 
 function getRoleId(filePath, guildId) {
@@ -46,16 +44,23 @@ function resolveRoleMention(mention, guild) {
     return role ? role.id : null;
 }
 
+async function downloadAndSaveImage(url, filename) {
+    if (fs.existsSync(filename)){
+        console.log("cache hit for " + filename)
+        return
+    }
+    console.log("cache miss for " + filename)
+    const response = await axios.get(url, { responseType: 'arraybuffer'});
+    fs.writeFileSync(filename, Buffer.from(response.data, 'binary'));
+}
 
 function getChannelToUpdate(filePath) {
     try {
         const fileContent = readChannelFile(filePath);
         // console.log('File content:', fileContent);
         const channelsToUpdate = fileContent;
-
         // console.log(`Updating channel for ${channelsToUpdate.guildId}`);
         // console.log('Read channel ID:', channelToUpdate.channelId);
-
         return channelsToUpdate;
     } catch (error) {
         console.error('Error reading channel ID:', error);
@@ -73,45 +78,15 @@ function setChannelToUpdate(filePath, guildId, channelId) {
         // console.log({guildId})
         // console.log({channels})
         console.log({existingChannelIndex})
-
         if (existingChannelIndex !== -1) {
             channels[existingChannelIndex].channelId = channelId;
         } else {
             channels.push({ guildId, channelId });
         }
-
         writeChannelFile(filePath, channels);
         console.log('Channel ID Updated!')
     } catch (error) {
             console.error('Error writing channel ID file: ', error);
-    }
-}
-
-function getLastProcessedIds(filePath) {
-    try {
-        const fileContent = readChannelFile(filePath);
-        return JSON.parse(fileContent) || [];
-    } catch (error) {
-        console.error('Error reading last processed IDs:', error.message);
-        return [];
-    }
-}
-
-function setLastProcessedIds(filePath, lastProcessedIds) {
-    try {
-        writeChannelFile(filePath, JSON.stringify(lastProcessedIds));
-        console.log('Last processed IDs updated successfully.');
-    } catch (error) {
-        console.error('Error updating last processed IDs:', error);
-    }
-}
-
-function setLastProcessedIds(filePath, lastProcessedIds) {
-    try {
-        writeChannelFile(filePath, JSON.stringify(lastProcessedIds));
-        console.log('Last processed IDs updated successfully.');
-    } catch (error) {
-        console.error('Error updating last processed IDs:', error);
     }
 }
 
@@ -129,31 +104,13 @@ function writeChannelFile(filePath, channels) {
     fs.writeFileSync(filePath, JSON.stringify(channels), null, 2);
 }
 
-function resolveRoleMention(mention, guild) {
-    const matches = mention.match(/^<@&(\d+)>$/);
-    if (!matches) return null;
-
-    const roleId = matches[1];
-    const role = guild.roles.cache.get(roleId);
-    return role ? role.id : null;
-}
-
-// exports
 module.exports = {
     getChannelToUpdate: getChannelToUpdate,
     setChannelToUpdate: setChannelToUpdate,
-    getLastProcessedIds: getLastProcessedIds,
-    setLastProcessedIds: setLastProcessedIds,
     writeChannelFile: writeChannelFile,
     readChannelFile: readChannelFile,
     getRoleId: getRoleId,
     setRoleId: setRoleId,
     resolveRoleMention: resolveRoleMention,
+    downloadAndSaveImage: downloadAndSaveImage,
 }
-// module.exports = getChannelToUpdate;
-// module.exports = setChannelToUpdate;
-// module.exports = getLastProcessedIds;
-// module.exports = setLastProcessedIds;
-// module.exports = updateNFTs;
-// module.exports = writeChannelFile;
-// module.exports = readChannelFile;
