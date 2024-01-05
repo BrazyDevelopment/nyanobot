@@ -9,14 +9,14 @@ You can also use it in your own server and keep track of all Nyano alerts by fol
 
 **EASY INSTALLATION:**
 1. Invite the bot to your server using https://nyanobot.armour.dev/invite
-2. Perform the `!setalerts` command and follow the instructions it gives you.
+2. Perform the **`!setalerts`** command and follow the instructions it gives you.
 3. Perform the commands listed below under "Command Usage".
     **(Role setting is optional, it will send without mentions.)**
     **(You must set at least ONE alert type's channel for the bot to work (obviously))**
     **(This now supports multiple channels and multiple roles!)**
     **(Role commands support role ID & mentions)**
 4. Wait for alerts in your chosen channels!
-5. Use the `!info <FileNumber>` command to see information about individual assets!
+5. Use the **`!info <FileNumber>`** command to see information about individual assets!
 
 
 **SELF INSTALLATION:**
