@@ -31,28 +31,28 @@ You can also use it in your own server and keep track of all Nyano alerts by fol
 
 # Command Usage:
 
-1.   **Sales:**
+## **Sales:**
 
     `!setalerts sales channel <channelID>`
 
     `!setalerts sales role <roleID>`
 
 
-2.   **Listings:**
+## **Listings:**
 
     `!setalerts listings channel <channelID>`
 
     `!setalerts listings role <roleID>`
 
 
-3.   **Transfers:**
+## **Transfers:**
 
     `!setalerts transfers channel <channelID>`
 
     `!setalerts transfers role <roleID>`
 
 
-4.    **Offers:**
+## **Offers:**
 
     `!setalerts offers channel <channelID>`
 
