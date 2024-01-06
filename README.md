@@ -6,10 +6,12 @@ A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is 
 
 You can also use it in your own server and keep track of all Nyano trades by inviting the bot via it's invite link below.
 
-**OFFICIAL DOCUMENTATION**
+**OFFICIAL DOCUMENTATION:**
 
 You can now view our official documentation at **https://docs.armour.dev/discord-bots/nyano-bot**
-If you prefer to follow installation instructions with pictures and a more in depth guide, then please visit the above. If not you can continue with the below guides.
+
+If you prefer to follow installation instructions with pictures and a more in depth guide, then please visit the above link. 
+If not, you can continue with the below guides.
 
 
 **EASY INSTALLATION:**
