@@ -1,8 +1,7 @@
 # Nyano Bot
 
 # About
-Simply use `!setchannel` and follow the instructions on screen!
-A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is traded on Nanswap!
+A simple public Discord bot to be notified when a new Nyano Cat (Nano 'NFT') is sold, transferred, listed or offered on at Nanswap!
 
 You can also use it in your own server and keep track of all Nyano trades by inviting the bot via it's invite link below.
 
@@ -10,15 +9,10 @@ You can also use it in your own server and keep track of all Nyano trades by inv
 
 You can now view our official documentation at **https://docs.armour.dev/discord-bots/nyano-bot**
 
-If you prefer to follow installation instructions with pictures and a more in depth guide, then please visit the above link. 
-If not, you can continue with the below guides.
-
-
 **EASY INSTALLATION:**
-1. Invite the bot to your server using https://nyanobot.armour.dev/invite
-2. Perform the `!setchannel` command and follow the instructions it gives you.
-3. Perform the `!setrole` command and mention your chosen role.
-4. Wait for alerts!
+1. Invite the bot to your server using **https://nyanobot.armour.dev/invite**
+2. Perform the `!setalerts` command using the Command Usage guide **[here](https://github.com/BrazyDevelopment/nyanobot?tab=readme-ov-file#command-usage)**
+4. You can also use `!info <fileNumber>` in any channel to return information about a specific asset.
 
 
 **SELF INSTALLATION:**
@@ -33,20 +27,20 @@ If not, you can continue with the below guides.
 
 
 # Command Usage:
-Set the channel you want the bot to post in: `!setchannel <channelid>` 
-Set the role you would like to be alerted: `!setrole <roleid>`
+[READ OUR COMMAND USAGE DOCUMENTATION HERE](https://docs.armour.dev/discord-bots/nyano-bot/command-usage)
 
 
 # See It In Action:
-You can see the bot in action in the Nyano Cats Discord server here: https://discord.gg/nyano
+You can see the public bot in action in the Nyano Cats Discord server here: https://discord.gg/nyano
+You can also simply click the bot's profile and select **"Add App"** and you can add it to your server this way too!
 
 
 # IMPORTANT:
-If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` for production.
+If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` and also `data.template` to `data` for production.
 
 
-# Preview:
-![Preview](https://media.discordapp.net/attachments/904261276899880970/1191681100297273455/image.png?ex=65a65282&is=6593dd82&hm=dd42f4b592aba676347115183c98f1fd97a39fd6056f2d9d62e372d01731abaa&=&format=webp&quality=lossless)
+# Sales Alert Preview:
+![Sales Alert Preview](https://media.discordapp.net/attachments/904261276899880970/1191681100297273455/image.png?ex=65a65282&is=6593dd82&hm=dd42f4b592aba676347115183c98f1fd97a39fd6056f2d9d62e372d01731abaa&=&format=webp&quality=lossless)
 
 
 # Cool Dude:
