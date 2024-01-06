@@ -36,7 +36,7 @@ You can also simply click the bot's profile and select **"Add App"** and you can
 
 
 # IMPORTANT:
-If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename is to `config.json` and also `data.template` to `data` for production.
+If you're downloading and using the open source version, then you need to configure the `config.template.json` and rename it to `config.json` and also do the same with `data.template`, rename it to `data` for production.
 
 
 # Sales Alert Preview:
