@@ -211,6 +211,28 @@ client.on("ready", async () => {
     })();
 });
 
+async function sendPriceChangeAlert(listingElement, previousPrice) {
+    let channelsToUpdates = getChannelToUpdate(listingchannelIdPath);
+
+    // Construct the message using Discord.js EmbedBuilder
+    const Embed = new EmbedBuilder()
+        .setColor(0xFF0000) // Red color for price changes
+        .setTitle(`NYANO PRICE CHANGE ALERT!`)
+        .setDescription(`**[${listingElement.assetId.name}](${listingElement.assetId.id}) price has been updated!**`)
+        .addFields(
+            { name: '__Previous Price:__', value: `**${previousPrice} ${listingElement.priceTicker}**`, inline: true },
+            { name: '__New Price:__', value: `**${listingElement.price} ${listingElement.priceTicker}**`, inline: true },
+        )
+        .setTimestamp();
+
+    // Send the message to designated channels
+    for (let i = 0; i < channelsToUpdates.length; i++) {
+        const channelIdToUpdate = channelsToUpdates[i].channelId;
+        let channel = await client.channels.cache.get(channelIdToUpdate);
+        await channel.send({ embeds: [Embed] });
+    }
+}
+
 async function postNewTransfers() {
     let channelsToUpdates = getChannelToUpdate(transferchannelIdPath);
     console.log({ channelsToUpdates });
@@ -221,7 +243,7 @@ async function postNewTransfers() {
             const transferElement = transfersData[i];
             if (!lastProcessedTransfers.includes(transferElement._id)) {
                 const imageUrl = transferElement.assetId.location;
-                const imageName = transferElement.assetId.name.replace(' ', '').replace('#', '-') + '.png';
+                const imageName = transferElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
@@ -235,8 +257,8 @@ async function postNewTransfers() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`NYANO TRANSFER ALERT!`)
-                    .setDescription(`**[${transferElement.assetId.name}](${link}) has been transferred to ${toUsername}](${touserLink})!\n\nSee the full Nyano Collection [here](https://nanswap.com/art)!**`)
+                    .setTitle(`Nyano Transfer Alert!`)
+                    .setDescription(`**[${transferElement.assetId.name}](${link}) has been transferred to [${toUsername}](${touserLink})!\n\nSee the full details [here](${link})!**`)
                     .setURL(link)
                     .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
                     .setImage('attachment://' + imageName)
@@ -244,7 +266,7 @@ async function postNewTransfers() {
                         // Fields specific to transfer
                         { name: '__From User:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
                         { name: '__To User:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
-                        { name: '__File:__', value: `**[${transferElement.assetId.name}](${link})**`, inline: true },
+                        { name: '__File:__', value: `**[${transferElement.assetId.name}](${link})**`, inline: false },
                     )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
@@ -259,7 +281,7 @@ async function postNewTransfers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = transferRoleId !== null ? `<@&${transferRoleId}>` : ''
                     // Send embed
-                    await channel.send({ content: `${mention}`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `**[${transferElement.assetId.name}](${link})** has been transferred to **[${fromUsername}](${fromuserLink})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedTransfers.push(transferElement._id)
                 }
@@ -285,7 +307,7 @@ async function postNewSales() {
             const saleElement = apiData[i];
             if (!lastProcessedSales.includes(saleElement._id)) {
                 const imageUrl = saleElement.assetId.location;
-                const imageName = saleElement.assetId.name.replace(' ', '').replace('#', '-') + '.png';
+                const imageName = saleElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
@@ -298,8 +320,8 @@ async function postNewSales() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`NYANO SALE ALERT!`)
-                    .setDescription(`**[${saleElement.assetId.name}](${link}) has been sold for ${+saleElement.price} ${saleElement.priceTicker}!\n\nSee the full Nyano Collection [here](https://nanswap.com/art)!**`)
+                    .setTitle(`Nyano Sale Alert!`)
+                    .setDescription(`**[${saleElement.assetId.name}](${link}) has been sold for ${+saleElement.price} ${saleElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
                     .setURL(link)
                     .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
                     .setImage('attachment://' + imageName)
@@ -307,7 +329,7 @@ async function postNewSales() {
                         { name: '__Seller:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
                         { name: '__Buyer:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
                         { name: '__File:__', value: `**[${saleElement.assetId.name}](${link})**`, inline: false },
-                        { name: '__Price:__', value: `**${+saleElement.price} ${saleElement.priceTicker}**`, inline: true },
+                        { name: '__Price:__', value: `**${+saleElement.price} ${saleElement.priceTicker}**`, inline: false },
 
 
                     )
@@ -324,7 +346,7 @@ async function postNewSales() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = salesRoleId !== null ? `<@&${salesRoleId}>` : ''
                     // Send embed
-                    await channel.send({ content: `${mention}`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **${+saleElement.price} ${saleElement.priceTicker}**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedSales.push(saleElement._id)
                 }
@@ -335,6 +357,7 @@ async function postNewSales() {
     }
 }
 
+let currentListingsPrices = {};
 async function postNewListings() {
     let channelsToUpdates = getChannelToUpdate(listingchannelIdPath);
     console.log({ channelsToUpdates });
@@ -343,9 +366,26 @@ async function postNewListings() {
 
         for (let i = 0; i < listingsData.length; i++) {
             const listingElement = listingsData[i];
-            if (!lastProcessedListings.includes(listingElement._id)) {
+            const listingId = listingElement._id;
+
+            // Check if the listing exists in the stored prices
+            if (!currentListingsPrices[listingId]) {
+                currentListingsPrices[listingId] = listingElement.price;
+            }
+
+            // Check for price changes
+            if (currentListingsPrices[listingId] !== listingElement.price) {
+                // Price has changed, trigger alert
+                await sendPriceChangeAlert(listingElement, currentListingsPrices[listingId]);
+                // Update the stored price
+                currentListingsPrices[listingId] = listingElement.price;
+                // break;
+                // return;
+            }
+
+            if (!lastProcessedListings.includes(listingId)) {
                 const imageUrl = listingElement.assetId.location;
-                const imageName = listingElement.assetId.name.replace(' ', '').replace('#', '-') + '.png';
+                const imageName = listingElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
@@ -357,8 +397,8 @@ async function postNewListings() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`NYANO LISTING ALERT!`)
-                    .setDescription(`**[${listingElement.assetId.name}](${link}) has been listed for ${+listingElement.price} ${listingElement.priceTicker}!\n\nSee the full Nyano Collection [here](https://nanswap.com/art)!**`)
+                    .setTitle(`Nyano Listing Alert!`)
+                    .setDescription(`**[${listingElement.assetId.name}](${link}) has been listed for ${+listingElement.price} ${listingElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
                     .setURL(link)
                     .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless') // Replace with the actual thumbnail URL
                     .setImage('attachment://' + imageName)
@@ -366,8 +406,8 @@ async function postNewListings() {
                         // Fields specific to listing
                         { name: '__Seller:__', value: `**[${listingElement.fromUserId.username}](${fromuserLink})**`, inline: true },
                         { name: '__Price:__', value: `**${+listingElement.price} ${listingElement.priceTicker}**`, inline: true },
-                        { name: '__File:__', value: `**[${listingElement.assetId.name}](${link})**`, inline: true },
-                        { name: '__Status:__', value: `**${listingElement.state}**`, inline: true },
+                        { name: '__File:__', value: `**[${listingElement.assetId.name}](${link})**`, inline: false },
+                        { name: '__Status:__', value: `**${listingElement.state}**`, inline: false },
                     )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
@@ -382,7 +422,7 @@ async function postNewListings() {
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = listingroleId !== null ? `<@&${listingroleId}>` : '';
 
-                    await channel.send({ content: `${mention}`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **${+listingElement.price} ${listingElement.priceTicker}**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedListings.push(listingElement._id);
                 }
@@ -403,7 +443,7 @@ async function postNewOffers() {
             const offerElement = offersData[i];
             if (!lastProcessedOffers.includes(offerElement._id)) {
                 const imageUrl = offerElement.assetId.location;
-                const imageName = offerElement.assetId.name.replace(' ', '').replace('#', '-') + '.png';
+                const imageName = offerElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
@@ -415,8 +455,8 @@ async function postNewOffers() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`NYANO OFFER ALERT!`)
-                    .setDescription(`**[${fromUsername}](${fromuserLink}) has placed an offer on [${offerElement.assetId.name}](${link}) for ${+offerElement.price} ${offerElement.priceTicker}!\n\nSee the full Nyano Collection [here](https://nanswap.com/art)!**`)
+                    .setTitle(`Nyano Offer Alert!`)
+                    .setDescription(`**[${fromUsername}](${fromuserLink}) has placed an offer on [${offerElement.assetId.name}](${link}) for ${+offerElement.price} ${offerElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
                     .setURL(link)
                     .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless') // Replace with the actual thumbnail URL
                     .setImage('attachment://' + imageName)
@@ -424,8 +464,8 @@ async function postNewOffers() {
                         // Fields specific to offer
                         { name: '__Bidder:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
                         { name: '__Price:__', value: `**${+offerElement.price} ${offerElement.priceTicker}**`, inline: true },
-                        { name: '__File:__', value: `**[${offerElement.assetId.name}](${link})**`, inline: true },
-                        { name: '__Status:__', value: `**${offerElement.state}**`, inline: true },
+                        { name: '__File:__', value: `**[${offerElement.assetId.name}](${link})**`, inline: false },
+                        { name: '__Status:__', value: `**${offerElement.state}**`, inline: false },
                     )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
@@ -440,7 +480,7 @@ async function postNewOffers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = offerroleId !== null ? `<@&${offerroleId}>` : '';
 
-                    await channel.send({ content: `${mention}`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `**[${fromUsername}](${fromuserLink})** has offered **${+offerElement.price} ${offerElement.priceTicker}** for **[${offerElement.assetId.name}](${link})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedOffers.push(offerElement._id);
                 }
