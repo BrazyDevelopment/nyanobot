@@ -281,7 +281,7 @@ async function postNewTransfers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = transferRoleId !== null ? `<@&${transferRoleId}>` : ''
                     // Send embed
-                    await channel.send({ content: `**[${transferElement.assetId.name}](${link})** has been transferred to **[${fromUsername}](${fromuserLink})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `**[${transferElement.assetId.name}](${link})** has been transferred to **[${toUsername}](${touserLink})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedTransfers.push(transferElement._id)
                 }
