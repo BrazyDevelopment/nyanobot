@@ -281,7 +281,7 @@ async function postNewTransfers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = transferRoleId !== null ? `<@&${transferRoleId}>` : ''
                     // Send embed
-                    await channel.send({ content: `**[${transferElement.assetId.name}](${link})** has been transferred to **[${toUsername}](${touserLink})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${transferElement.assetId.name}](${link})** has been transferred to **[${toUsername}](${touserLink})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedTransfers.push(transferElement._id)
                 }
@@ -346,7 +346,7 @@ async function postNewSales() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = salesRoleId !== null ? `<@&${salesRoleId}>` : ''
                     // Send embed
-                    await channel.send({ content: `**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **${+saleElement.price} ${saleElement.priceTicker}**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **${+saleElement.price} ${saleElement.priceTicker}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedSales.push(saleElement._id)
                 }
@@ -422,7 +422,7 @@ async function postNewListings() {
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = listingroleId !== null ? `<@&${listingroleId}>` : '';
 
-                    await channel.send({ content: `**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **${+listingElement.price} ${listingElement.priceTicker}**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **${+listingElement.price} ${listingElement.priceTicker}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedListings.push(listingElement._id);
                 }
@@ -480,7 +480,7 @@ async function postNewOffers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = offerroleId !== null ? `<@&${offerroleId}>` : '';
 
-                    await channel.send({ content: `**[${fromUsername}](${fromuserLink})** has offered **${+offerElement.price} ${offerElement.priceTicker}** for **[${offerElement.assetId.name}](${link})**.\n||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${fromUsername}](${fromuserLink})** has offered **${+offerElement.price} ${offerElement.priceTicker}** for **[${offerElement.assetId.name}](${link})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedOffers.push(offerElement._id);
                 }
