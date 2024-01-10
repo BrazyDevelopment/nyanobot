@@ -88,7 +88,7 @@ module.exports = {
                   const imagePath = `${imageInfo.id}.png`;
                   await downloadAndSaveImage(imageInfo.location, imagePath);
 
-                  const assetURL = `https://nanswap.com/art/assets/${imageInfo.id}`
+                  const assetURL = `https://nanswap.com/art/assets/${imageInfo.id}${config.referral}`
 
       
                   const Embed = new EmbedBuilder()

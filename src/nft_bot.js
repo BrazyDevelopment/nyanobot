@@ -247,13 +247,13 @@ async function postNewTransfers() {
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
-                let link = 'https://nanswap.com/art/assets/' + transferElement.assetId.id;
+                let link = 'https://nanswap.com/art/assets/' + transferElement.assetId.id + config.referral;
 
                 // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = transferElement.fromUserId.username === undefined ? 'Unnamed' : transferElement.fromUserId.username;
                 const toUsername = transferElement.toUserId.username === undefined ? 'Unnamed' : transferElement.toUserId.username;
-                let fromuserLink = 'https://nanswap.com/art/' + transferElement.fromUserId.username
-                let touserLink = 'https://nanswap.com/art/' + transferElement.toUserId.username
+                let fromuserLink = 'https://nanswap.com/art/' + transferElement.fromUserId.username + config.referral
+                let touserLink = 'https://nanswap.com/art/' + transferElement.toUserId.username + config.referral
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
@@ -311,12 +311,12 @@ async function postNewSales() {
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
-                let link = 'https://nanswap.com/art/assets/' + saleElement.assetId.id
+                let link = 'https://nanswap.com/art/assets/' + saleElement.assetId.id + config.referral
                 // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
                 const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
-                let fromuserLink = 'https://nanswap.com/art/' + fromUsername;
-                let touserLink = 'https://nanswap.com/art/' + toUsername;
+                let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
+                let touserLink = 'https://nanswap.com/art/' + toUsername + config.referral;
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
@@ -389,10 +389,10 @@ async function postNewListings() {
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
-                let link = 'https://nanswap.com/art/assets/' + listingElement.assetId.id;
+                let link = 'https://nanswap.com/art/assets/' + listingElement.assetId.id + config.referral;
                 const fromUsername = listingElement.fromUserId.username === undefined ? 'Unnamed' : listingElement.fromUserId.username;
                 // const toUsername = listingElement.toUserId.username === undefined ? 'Unnamed' : listingElement.toUserId.username;
-                let fromuserLink = 'https://nanswap.com/art/' + fromUsername;
+                let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
                 // let touserLink = 'https://nanswap.com/art/' + toUsername;
 
                 const Embed = new EmbedBuilder()
@@ -447,10 +447,10 @@ async function postNewOffers() {
 
                 await downloadAndSaveImage(imageUrl, imageName);
 
-                let link = 'https://nanswap.com/art/assets/' + offerElement.assetId.id;
+                let link = 'https://nanswap.com/art/assets/' + offerElement.assetId.id + config.referral;
                 const fromUsername = offerElement.fromUserId.username === undefined ? 'Unnamed' : offerElement.fromUserId.username;
                 // const toUsername = offerElement.toUserId.username === undefined ? 'Unnamed' : offerElement.toUserId.username;
-                let fromuserLink = 'https://nanswap.com/art/' + fromUsername;
+                let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
                 // let touserLink = 'https://nanswap.com/art/' + toUsername;
 
                 const Embed = new EmbedBuilder()
