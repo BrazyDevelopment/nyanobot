@@ -40,7 +40,7 @@ If you're downloading and using the open source version, then you need to config
 
 
 # Sales Alert Preview:
-![Sales Alert Preview](https://media.discordapp.net/attachments/904261276899880970/1191681100297273455/image.png?ex=65a65282&is=6593dd82&hm=dd42f4b592aba676347115183c98f1fd97a39fd6056f2d9d62e372d01731abaa&=&format=webp&quality=lossless)
+![Sales Alert Preview](https://i.imgur.com/TJVy58q.png)
 
 
 # Cool Dude:
