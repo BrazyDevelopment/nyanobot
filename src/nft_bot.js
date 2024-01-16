@@ -7,7 +7,8 @@ const {
 } = require('./utils.js');
 const { Client, GatewayIntentBits, ActivityType, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
-const config = require('./config.json');
+const { consoleLog, consoleError } = require('./debug.js');
+const config = require('./config/config.json');
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -16,6 +17,7 @@ const client = new Client({
         GatewayIntentBits.GuildMessageReactions
     ],
 });
+const emoji = require('./config/emojis.json')
 
 // Load the channel ID from the file if it exists
 const listingchannelIdPath = 'src/data/channels/listingschannelId.txt';
@@ -28,17 +30,16 @@ const listingsroleIdsPath = 'src/data/roles/listingsroleIds.txt';
 const transfersroleIdsPath = 'src/data/roles/transfersroleIds.txt';
 const offersroleIdsPath = 'src/data/roles/offersroleIds.txt';
 
-
 // PERIODIC CHECKS START
-console.log('Before setInterval. Config:', config);
+consoleLog('Before setInterval. Config:', config);
 setInterval(async () => {
     // check new sales every config.updateInterval
-    console.log('Periodic update triggered.');
+    consoleLog('Periodic update triggered.');
     await postNewEvents();
 }, config.updateInterval);
+consoleLog('After setInterval.');
 //PERIODIC CHECKS END
 
-console.log('After setInterval.');
 // Fetch api data by url in config
 const fetchDataByApiUrl = async (apiUrl) => {
     try {
@@ -46,7 +47,7 @@ const fetchDataByApiUrl = async (apiUrl) => {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching API data:', error);
+        consoleError('Error fetching API data:', error);
         throw error;
     }
 };
@@ -68,12 +69,14 @@ async function postNewEvents() {
     await postNewListings();
     await postNewOffers();
 }
+// End of api stuff
 
+// Main Loop
 client.on("ready", async () => {
-    console.log("bot ready")
+    consoleLog("bot ready")
     // await postNewEvents(); -- uncomment for testing
-    console.log(`Logged in as ${client.user.tag}`);
-    //     // Set status after the bot is ready
+    consoleLog(`Logged in as ${client.user.tag}`);
+
     client.user.setPresence({
         activities: [{ name: 'Nanswap Art', type: ActivityType.Watching }],
         status: 'dnd'
@@ -81,39 +84,39 @@ client.on("ready", async () => {
 
     client.commands = new Map();
     const commandFiles = fs.readdirSync(`${__dirname}/commands`).filter(file => file.endsWith('.js'));
+    
     for (const file of commandFiles) {
         const command = require(`${__dirname}/commands/${file}`);
         client.commands.set(command.name, command);
     }
 
     if (!config || !config.salesApiUrl || !config.listingsApiUrl || !config.transfersApiUrl || !config.offersApiUrl || !config.token) {
-        console.error('Invalid configuration. Please check your config.json file.');
+        consoleError('Invalid configuration. Please check your config.json file.');
         return;
     }
 
     client.on('messageCreate', async (message) => {
         try {
-            // console.log('Received message:', message.content);
             // Check if the message starts with the bot's prefix and is not sent by another bot
             if (!message.content.startsWith(config.prefix) || message.author.bot) return;
-            // Extract command name and arguments from the message
+
             const args = message.content.slice(config.prefix.length).trim().split(/ +/);
             const commandName = args.shift().toLowerCase();
-            // console.log('Command name:', commandName);
-            // Check if the command exists in the commands Map
+
             if (!client.commands.has(commandName)) return;
-            // Execute the command
+
             const command = client.commands.get(commandName);
-            // console.log('Executing command:', command.name);
             command.execute(message, args, client, config);
+
         } catch (error) {
-            console.error(error);
+            consoleError(error);
             message.reply('There was an error executing the command.');
         }
     });
 
     client.on('guildDelete', (guild) => {
         try {
+
             // REMOVE CHANNELS AND GUILDS FROM DATA STORAGE
 
             // Remove data from saleschannelId.txt
@@ -122,7 +125,7 @@ client.on("ready", async () => {
             if (salechannelIndex !== -1) {
                 salechannels.splice(salechannelIndex, 1);
                 writeChannelFile(saleschannelIdPath, salechannels);
-                console.log(`Removed sales channel data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed sales channel data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from listingschannelId.txt
             let listingchannels = readChannelFile(listingchannelIdPath);
@@ -130,7 +133,7 @@ client.on("ready", async () => {
             if (listingchannelIndex !== -1) {
                 listingchannels.splice(listingchannelIndex, 1);
                 writeChannelFile(listingchannelIdPath, listingchannels);
-                console.log(`Removed listing channel data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed listing channel data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from transferschannelId.txt
             let transferchannels = readChannelFile(transferchannelIdPath);
@@ -138,7 +141,7 @@ client.on("ready", async () => {
             if (transferchannelIndex !== -1) {
                 transferchannels.splice(transferchannelIndex, 1);
                 writeChannelFile(transferchannelIdPath, transferchannels);
-                console.log(`Removed transfer channel data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed transfer channel data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from offerschannelId.txt
             let offerchannels = readChannelFile(offerchannelIdPath);
@@ -146,7 +149,7 @@ client.on("ready", async () => {
             if (offerchannelIndex !== -1) {
                 offerchannels.splice(offerchannelIndex, 1);
                 writeChannelFile(offerchannelIdPath, offerchannels);
-                console.log(`Removed offer channel data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed offer channel data for guild: ${guild.name} (ID: ${guild.id})`);
             }
 
             // REMOVE GUILDS AND ROLES FROM DATA STORAGE
@@ -157,7 +160,7 @@ client.on("ready", async () => {
             if (salesroleIndex !== -1) {
                 salesroles.splice(salesroleIndex, 1);
                 writeChannelFile(salesroleIdsPath, salesroles);
-                console.log(`Removed sales role data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed sales role data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from listingsroleIds.txt
             let listingroles = readChannelFile(listingsroleIdsPath);
@@ -165,7 +168,7 @@ client.on("ready", async () => {
             if (listingroleIndex !== -1) {
                 listingroles.splice(listingroleIndex, 1);
                 writeChannelFile(listingsroleIdsPath, listingroles);
-                console.log(`Removed listings role data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed listings role data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from transfersroleIds.txt
             let transferroles = readChannelFile(transfersroleIdsPath);
@@ -173,7 +176,7 @@ client.on("ready", async () => {
             if (transferroleIndex !== -1) {
                 transferroles.splice(transferroleIndex, 1);
                 writeChannelFile(transfersroleIdsPath, transferroles);
-                console.log(`Removed transfers role data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed transfers role data for guild: ${guild.name} (ID: ${guild.id})`);
             }
             // Remove data from offersroleIds.txt
             let offerroles = readChannelFile(offersroleIdsPath);
@@ -181,10 +184,10 @@ client.on("ready", async () => {
             if (offerroleIndex !== -1) {
                 offerroles.splice(offerroleIndex, 1);
                 writeChannelFile(offersroleIdsPath, offerroles);
-                console.log(`Removed offers role data for guild: ${guild.name} (ID: ${guild.id})`);
+                consoleLog(`Removed offers role data for guild: ${guild.name} (ID: ${guild.id})`);
             }
         } catch (error) {
-            console.error('Error handling guildDelete event:', error);
+            consoleError('Error handling guildDelete event:', error);
         }
     });
     (async () => {
@@ -211,31 +214,10 @@ client.on("ready", async () => {
     })();
 });
 
-async function sendPriceChangeAlert(listingElement, previousPrice) {
-    let channelsToUpdates = getChannelToUpdate(listingchannelIdPath);
-
-    // Construct the message using Discord.js EmbedBuilder
-    const Embed = new EmbedBuilder()
-        .setColor(0xFF0000) // Red color for price changes
-        .setTitle(`NYANO PRICE CHANGE ALERT!`)
-        .setDescription(`**[${listingElement.assetId.name}](${listingElement.assetId.id}) price has been updated!**`)
-        .addFields(
-            { name: '__Previous Price:__', value: `**${previousPrice} ${listingElement.priceTicker}**`, inline: true },
-            { name: '__New Price:__', value: `**${listingElement.price} ${listingElement.priceTicker}**`, inline: true },
-        )
-        .setTimestamp();
-
-    // Send the message to designated channels
-    for (let i = 0; i < channelsToUpdates.length; i++) {
-        const channelIdToUpdate = channelsToUpdates[i].channelId;
-        let channel = await client.channels.cache.get(channelIdToUpdate);
-        await channel.send({ embeds: [Embed] });
-    }
-}
-
+// Function to post new transfers
 async function postNewTransfers() {
     let channelsToUpdates = getChannelToUpdate(transferchannelIdPath);
-    console.log({ channelsToUpdates });
+    consoleLog({ channelsToUpdates });
     try {
         const transfersData = await fetchTransferData();
 
@@ -249,7 +231,6 @@ async function postNewTransfers() {
 
                 let link = 'https://nanswap.com/art/assets/' + transferElement.assetId.id + config.referral;
 
-                // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = transferElement.fromUserId.username === undefined ? 'Unnamed' : transferElement.fromUserId.username;
                 const toUsername = transferElement.toUserId.username === undefined ? 'Unnamed' : transferElement.toUserId.username;
                 let fromuserLink = 'https://nanswap.com/art/' + transferElement.fromUserId.username + config.referral
@@ -257,18 +238,21 @@ async function postNewTransfers() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`Nyano Transfer Alert!`)
-                    .setDescription(`**[${transferElement.assetId.name}](${link}) has been transferred to [${toUsername}](${touserLink})!\n\nSee the full details [here](${link})!**`)
+                    .setTitle(`${emoji.Project} Nyano Cat Transfer Alert!`)
+                    .setDescription(`**${emoji.Transfer} [${transferElement.assetId.name}](${link}) has recently been transferred!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
                     .setURL(link)
-                    .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
-                    .setImage('attachment://' + imageName)
+                    .setThumbnail('attachment://' + imageName)
                     .addFields(
-                        // Fields specific to transfer
-                        { name: '__From User:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: '__To User:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
-                        { name: '__File:__', value: `**[${transferElement.assetId.name}](${link})**`, inline: false },
+                        { name: `__From User:__ ${emoji.Seller}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
+                        { name: `__To User:__ ${emoji.Buyer}`, value: `**[${toUsername}](${touserLink})**`, inline: true },
+                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: false },
+                        { 
+                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
+                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
+                            inline: false 
+                        },
                     )
-                    .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
+                    .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
@@ -276,11 +260,11 @@ async function postNewTransfers() {
                     const guildid = channelsToUpdates[i].guildId
                     const transferRoleId = getRoleId(transfersroleIdsPath, guildid);
 
-                    console.log('Channel to update:', channelsToUpdates[i]);
-                    console.log('Fetching channel ID from file:', transferchannelIdPath);
+                    consoleLog('Channel to update:', channelsToUpdates[i]);
+                    consoleLog('Fetching channel ID from file:', transferchannelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = transferRoleId !== null ? `<@&${transferRoleId}>` : ''
-                    // Send embed
+
                     await channel.send({ content: `||${mention}||\n**[${transferElement.assetId.name}](${link})** has been transferred to **[${toUsername}](${touserLink})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedTransfers.push(transferElement._id)
@@ -288,14 +272,15 @@ async function postNewTransfers() {
             }
         }
     } catch (error) {
-        console.error('Error fetching or posting transfers:', error);
+        consoleError('Error fetching or posting transfers:', error);
     }
 }
 
+// Function to post new sales
 async function postNewSales() {
     // Fetch the channel ID from the file
     let channelsToUpdates = getChannelToUpdate(saleschannelIdPath);
-    console.log({ channelsToUpdates });
+    consoleLog({ channelsToUpdates });
 
     try {
         // Fetch API data
@@ -303,7 +288,6 @@ async function postNewSales() {
 
         // Extract unique asset IDs from the API data
         for (let i = 0; i < apiData.length; i++) {
-            // for (let i = 0; i < 2; i++) {
             const saleElement = apiData[i];
             if (!lastProcessedSales.includes(saleElement._id)) {
                 const imageUrl = saleElement.assetId.location;
@@ -312,7 +296,6 @@ async function postNewSales() {
                 await downloadAndSaveImage(imageUrl, imageName);
 
                 let link = 'https://nanswap.com/art/assets/' + saleElement.assetId.id + config.referral
-                // console.log(`NEW SALES: ${saleElement.assetId.name} ${saleElement.type} ${+saleElement.price} ${saleElement.assetId.location}`)
                 const fromUsername = saleElement.fromUserId.username === undefined ? 'Unnamed' : saleElement.fromUserId.username;
                 const toUsername = saleElement.toUserId.username === undefined ? 'Unnamed' : saleElement.toUserId.username;
                 let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
@@ -320,20 +303,22 @@ async function postNewSales() {
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`Nyano Sale Alert!`)
-                    .setDescription(`**[${saleElement.assetId.name}](${link}) has been sold for ${+saleElement.price} ${saleElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
+                    .setTitle(`${emoji.Project} Nyano Cat Sale Alert!`)
+                    .setDescription(`**${emoji.Sale} [${saleElement.assetId.name}](${link}) was recently sold!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
                     .setURL(link)
-                    .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
-                    .setImage('attachment://' + imageName)
+                    .setThumbnail('attachment://' + imageName)
                     .addFields(
-                        { name: '__Seller:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: '__Buyer:__', value: `**[${toUsername}](${touserLink})**`, inline: true },
-                        { name: '__File:__', value: `**[${saleElement.assetId.name}](${link})**`, inline: false },
-                        { name: '__Price:__', value: `**${+saleElement.price} ${saleElement.priceTicker}**`, inline: false },
-
-
+                        { name: `__Seller:__ ${emoji.Seller}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
+                        { name: `__Buyer:__ ${emoji.Buyer}`, value: `**[${toUsername}](${touserLink})**`, inline: true },
+                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+saleElement.price}**`, inline: true },
+                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
+                        { 
+                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
+                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
+                            inline: false 
+                        },
                     )
-                    .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
+                    .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
@@ -341,26 +326,27 @@ async function postNewSales() {
                     const guildid = channelsToUpdates[i].guildId
                     const salesRoleId = getRoleId(salesroleIdsPath, guildid);
 
-                    console.log('Channel to update:', channelsToUpdates[i]);
-                    console.log('Fetching channel ID from file:', saleschannelIdPath);
+                    consoleLog('Channel to update:', channelsToUpdates[i]);
+                    consoleLog('Fetching channel ID from file:', saleschannelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = salesRoleId !== null ? `<@&${salesRoleId}>` : ''
-                    // Send embed
-                    await channel.send({ content: `||${mention}||\n**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **${+saleElement.price} ${saleElement.priceTicker}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    
+                    await channel.send({ content: `||${mention}||\n**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **Ӿ${+saleElement.price}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedSales.push(saleElement._id)
                 }
             }
         }
     } catch (error) {
-        console.error('Error fetching guild or channel:', error);
+        consoleError('Error fetching guild or channel:', error);
     }
 }
 
+// Function to post new listings
 let currentListingsPrices = {};
 async function postNewListings() {
     let channelsToUpdates = getChannelToUpdate(listingchannelIdPath);
-    console.log({ channelsToUpdates });
+    consoleLog({ channelsToUpdates });
     try {
         const listingsData = await fetchListingData();
 
@@ -368,20 +354,33 @@ async function postNewListings() {
             const listingElement = listingsData[i];
             const listingId = listingElement._id;
 
-            // Check if the listing exists in the stored prices
-            if (!currentListingsPrices[listingId]) {
-                currentListingsPrices[listingId] = listingElement.price;
+            // // Check if the listing is in the canceled set
+            // if (canceledListings.has(listingId)) {
+            //     consoleLog(`Listing ${listingElement.assetId.name} is marked as canceled. Skipping processing.`);
+            //     continue; // Skip processing this listing and move on to the next one
+            // }
+
+            // Check if the listing is recently canceled
+            if (listingElement.state === "CANCELED") {
+                consoleLog(`Listing ${listingElement.assetId.name} was recently canceled. Skipping processing.`);
+                // canceledListings.add(listingId);
+                continue;
             }
 
-            // Check for price changes
-            if (currentListingsPrices[listingId] !== listingElement.price) {
-                // Price has changed, trigger alert
-                await sendPriceChangeAlert(listingElement, currentListingsPrices[listingId]);
-                // Update the stored price
-                currentListingsPrices[listingId] = listingElement.price;
-                // break;
-                // return;
-            }
+            // // Check if the listing exists in the stored prices
+            // if (!currentListingsPrices[listingId]) {
+            //     currentListingsPrices[listingId] = listingElement.price;
+            // }
+
+            // // Check for price changes
+            // if (currentListingsPrices[listingId] !== listingElement.price) {
+            //     // Price has changed, trigger alert
+            //     await sendPriceChangeAlert(listingElement, currentListingsPrices[listingId]);
+            //     // Update the stored price
+            //     currentListingsPrices[listingId] = listingElement.price;
+            //     // break;
+            //     // return;
+            // }
 
             if (!lastProcessedListings.includes(listingId)) {
                 const imageUrl = listingElement.assetId.location;
@@ -391,51 +390,54 @@ async function postNewListings() {
 
                 let link = 'https://nanswap.com/art/assets/' + listingElement.assetId.id + config.referral;
                 const fromUsername = listingElement.fromUserId.username === undefined ? 'Unnamed' : listingElement.fromUserId.username;
-                // const toUsername = listingElement.toUserId.username === undefined ? 'Unnamed' : listingElement.toUserId.username;
                 let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
-                // let touserLink = 'https://nanswap.com/art/' + toUsername;
 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`Nyano Listing Alert!`)
-                    .setDescription(`**[${listingElement.assetId.name}](${link}) has been listed for ${+listingElement.price} ${listingElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
+                    .setTitle(`${emoji.Project} Nyano Cat Listing Alert!`)
+                    .setDescription(`**${emoji.Listing} [${listingElement.assetId.name}](${link}) was recently listed!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
                     .setURL(link)
-                    .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless') // Replace with the actual thumbnail URL
-                    .setImage('attachment://' + imageName)
+                    .setThumbnail(`attachment://` + imageName)
                     .addFields(
-                        // Fields specific to listing
-                        { name: '__Seller:__', value: `**[${listingElement.fromUserId.username}](${fromuserLink})**`, inline: true },
-                        { name: '__Price:__', value: `**${+listingElement.price} ${listingElement.priceTicker}**`, inline: true },
-                        { name: '__File:__', value: `**[${listingElement.assetId.name}](${link})**`, inline: false },
-                        { name: '__Status:__', value: `**${listingElement.state}**`, inline: false },
+                        { name: `__Seller:__ ${emoji.Seller}`, value: `**[${listingElement.fromUserId.username}](${fromuserLink})**`, inline: true },
+                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+listingElement.price}**`, inline: true },
+                        { name: `__Status:__ ${emoji.Status}`, value: `**${listingElement.state}**`, inline: true },
+                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
+                        { 
+                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
+                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
+                            inline: false 
+                        },
                     )
-                    .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
+                    .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
+
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
                     const channelIdToUpdate = channelsToUpdates[i].channelId;
                     const guildId = channelsToUpdates[i].guildId;
                     const listingroleId = getRoleId(listingsroleIdsPath, guildId);
 
-                    console.log('Channel to update:', channelsToUpdates[i]);
-                    console.log('Fetching channel ID from file:', listingchannelIdPath);
+                    consoleLog('Channel to update:', channelsToUpdates[i]);
+                    consoleLog('Fetching channel ID from file:', listingchannelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = listingroleId !== null ? `<@&${listingroleId}>` : '';
 
-                    await channel.send({ content: `||${mention}||\n**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **${+listingElement.price} ${listingElement.priceTicker}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **Ӿ${+listingElement.price}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedListings.push(listingElement._id);
                 }
             }
         }
     } catch (error) {
-        console.error('Error fetching or posting listings:', error);
+        consoleError('Error fetching or posting listings:', error);
     }
 }
 
+// Function to post new offers
 async function postNewOffers() {
     let channelsToUpdates = getChannelToUpdate(offerchannelIdPath);
-    console.log({ channelsToUpdates });
+    consoleLog({ channelsToUpdates });
     try {
         const offersData = await fetchOfferData();
 
@@ -449,25 +451,26 @@ async function postNewOffers() {
 
                 let link = 'https://nanswap.com/art/assets/' + offerElement.assetId.id + config.referral;
                 const fromUsername = offerElement.fromUserId.username === undefined ? 'Unnamed' : offerElement.fromUserId.username;
-                // const toUsername = offerElement.toUserId.username === undefined ? 'Unnamed' : offerElement.toUserId.username;
                 let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
-                // let touserLink = 'https://nanswap.com/art/' + toUsername;
-
+                
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
-                    .setTitle(`Nyano Offer Alert!`)
-                    .setDescription(`**[${fromUsername}](${fromuserLink}) has placed an offer on [${offerElement.assetId.name}](${link}) for ${+offerElement.price} ${offerElement.priceTicker}!\n\nSee the full details [here](${link})!**`)
+                    .setTitle(`${emoji.Project} Nyano Cat Offer Alert!`)
+                    .setDescription(`**${emoji.Offer} [${offerElement.assetId.name}](${link}) has recently received an offer!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
                     .setURL(link)
-                    .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless') // Replace with the actual thumbnail URL
-                    .setImage('attachment://' + imageName)
+                    .setThumbnail(`attachment://` + imageName)
                     .addFields(
-                        // Fields specific to offer
-                        { name: '__Bidder:__', value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: '__Price:__', value: `**${+offerElement.price} ${offerElement.priceTicker}**`, inline: true },
-                        { name: '__File:__', value: `**[${offerElement.assetId.name}](${link})**`, inline: false },
-                        { name: '__Status:__', value: `**${offerElement.state}**`, inline: false },
+                        { name: `__Bidder:__ ${emoji.Bidder}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
+                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+offerElement.price}**`, inline: true },
+                        { name: `__Status:__ ${emoji.Status}`, value: `**${offerElement.state}**`, inline: true },
+                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
+                        { 
+                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
+                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
+                            inline: false 
+                        },
                     )
-                    .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
+                    .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
@@ -475,20 +478,38 @@ async function postNewOffers() {
                     const guildId = channelsToUpdates[i].guildId;
                     const offerroleId = getRoleId(offersroleIdsPath, guildId);
 
-                    console.log('Channel to update:', channelsToUpdates[i]);
-                    console.log('Fetching channel ID from file:', offerchannelIdPath);
+                    consoleLog('Channel to update:', channelsToUpdates[i]);
+                    consoleLog('Fetching channel ID from file:', offerchannelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = offerroleId !== null ? `<@&${offerroleId}>` : '';
 
-                    await channel.send({ content: `||${mention}||\n**[${fromUsername}](${fromuserLink})** has offered **${+offerElement.price} ${offerElement.priceTicker}** for **[${offerElement.assetId.name}](${link})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `||${mention}||\n**[${fromUsername}](${fromuserLink})** has offered **Ӿ${+offerElement.price}** for **[${offerElement.assetId.name}](${link})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedOffers.push(offerElement._id);
                 }
             }
         }
     } catch (error) {
-        console.error('Error fetching or posting offers:', error);
+        consoleError('Error fetching or posting offers:', error);
     }
 }
 
+// Exports
+module.exports = {
+    fetchDataByApiUrl,
+    fetchSalesData: async () => {
+        return await fetchDataByApiUrl(config.salesApiUrl);
+    },
+    fetchTransferData: async () => {
+        return await fetchDataByApiUrl(config.transfersApiUrl);
+    },
+    fetchListingData: async () => {
+        return await fetchDataByApiUrl(config.listingsApiUrl);
+    },
+    fetchOfferData: async () => {
+        return await fetchDataByApiUrl(config.offersApiUrl);
+    },
+};
+
+// Login Client via Token
 client.login(config.token);

@@ -1,120 +1,230 @@
+// Import necessary modules
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const csv = require('csv-parser');
-const config = require('../config.json');
-const { downloadAndSaveImage } = require('../utils.js')
+const config = require('../config/config.json');
+const emoji = require('../config/emojis.json');
+const { downloadAndSaveImage, readCSV } = require('../utils.js');
+const { consoleLog, consoleError } = require('../debug.js');
+const { fetchDataByApiUrl } = require('../nft_bot.js');
+
+// Extract configuration values
 const prefix = config.prefix;
+
+// Create a Discord client instance
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions
+        GatewayIntentBits.GuildMessageReactions,
     ],
 });
 
-let clientInstance; // Declare a variable to hold the client instance
+let clientInstance;
 const fileData = {};
 const imageData = {};
+
+// Function to set the client instance
 function setClient(client) {
-  clientInstance = client;
+    clientInstance = client;
 }
 
-function readCSV() {
-  return new Promise((resolve, reject) => {
-    fs.createReadStream('src/data/attributes/rarity.csv')
-      .pipe(csv())
-      .on('data', (row) => {
-        const fileNumber = parseInt(row['File Number']);
-        if (!isNaN(fileNumber)) {
-          fileData[fileNumber] = {
-            rarity: parseFloat(row['Rarity Score']),
-            position: parseInt(row['Position']),
-          };
-        }
-      })
-      .on('end', () => {
-        // Reading the second CSV file (asset-id-name.csv)
-        fs.createReadStream('src/data/attributes/assets-id-name.csv')
-          .pipe(csv())
-          .on('data', (row) => {
-            const fileNumber = parseInt(row['name'].split('#')[1]);
-            imageData[fileNumber] = {
-              id: row['id'],
-              location: row['location'],
-              name: row['name'],
-            };
-          })
-          .on('end', () => {
-            console.log('CSV files successfully processed.');
-            resolve();
-          })
-          .on('error', (error) => {
-            reject(error);
-          });
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
-  });
+// Function to fetch asset data by asset ID
+async function fetchAssetData(assetId) {
+    try {
+        const apiUrl = `https://art.nanswap.com/asset/${assetId}`;
+        return await fetchDataByApiUrl(apiUrl);
+    } catch (error) {
+        consoleError('Error fetching or processing asset data:', error);
+        throw error;
+    }
 }
 
+// Function to convert a numerical value to a percentage
+function convertToPercentage(value) {
+    if (typeof value !== 'number') {
+        return value;
+    }
+    return `${(value / 10).toFixed(1)}%`;
+}
+
+// Function to get emoji based on trait type
+function getEmojiForTrait(traitType) {
+    switch (traitType) {
+        case "Background":
+            return emoji.Background;
+        case "Body":
+            return emoji.Body;
+        case "Collar":
+            return emoji.Collar;
+        case "Costume":
+            return emoji.Costume;
+        case "Exterior":
+            return emoji.Exterior;
+        case "Eyes":
+            return emoji.Eyes;
+        case "Face":
+            return emoji.Face;
+        case "Glasses":
+            return emoji.Glasses;
+        case "Hat":
+            return emoji.Hat;
+        case "Mouth":
+            return emoji.Mouth;
+        case "Stache":
+            return emoji.Stache;
+        // Add more cases for other trait types
+        default:
+            return emoji.Attributes;
+    }
+}
+
+// Export the command module
 module.exports = {
     name: 'info',
     description: 'Retrieve rarity score, overall position, and image of a file number',
-    setClient, 
+    setClient,
 
+    // Execute function for handling the 'info' command
     async execute(message) {
-      if (message.author.bot) return;
+        if (message.author.bot) return;
 
         if (message.content.startsWith(prefix + 'info')) {
-            await readCSV(); // Wait for CSV processing to complete
+            // Read CSV files into fileData and imageData objects
+            await readCSV(fileData, imageData);
+
             const args = message.content.slice(prefix.length).trim().split(/ +/);
             const command = args.shift().toLowerCase();
 
             if (command === 'info') {
-            const fileNumber = parseInt(args[0]);
-    
-              if (fileNumber in fileData && fileNumber in imageData) {
-                  const fileInfo = fileData[fileNumber];
-                  const imageInfo = imageData[fileNumber];
+                const fileNumber = parseInt(args[0]);
 
-                  console.log('Rarity:', fileInfo.rarity);
-                  console.log('Position:', fileInfo.position);
-                  console.log('ID:', imageInfo.id);
-                  console.log('Location:', imageInfo.location);
-                
+                if (fileNumber in fileData && fileNumber in imageData) {
+                    try {
+                        // Fetch asset data using the asset ID from imageData
+                        const assetData = await fetchAssetData(imageData[fileNumber].id);
 
-                  const imagePath = `${imageInfo.id}.png`;
-                  await downloadAndSaveImage(imageInfo.location, imagePath);
+                        const fileInfo = fileData[fileNumber];
+                        const imageUrl = assetData.asset.location;
+                        const imageName = `${assetData.asset.id.replace(' ', '').replace('#', '-')}.png`;
 
-                  const assetURL = `https://nanswap.com/art/assets/${imageInfo.id}${config.referral}`
+                        // Download and save the image locally
+                        await downloadAndSaveImage(imageUrl, imageName);
 
-      
-                  const Embed = new EmbedBuilder()
-                      .setColor(0x0099FF)
-                      .setTitle(`Info on ${imageInfo.name}!`)
-                      .setDescription(`\n**## Rarity Score: ${fileInfo.rarity}** *(Higher = Rarer)*\n**## Position: ${fileInfo.position}** *(out of 10K)*\n\n**See the full details [here](${assetURL})!**`)
-                      .setThumbnail('https://media.discordapp.net/attachments/1189817279421108315/1192253985407639703/91594f45-a8bf-4a25-b4fc-ce6e8e3f4034-min-removebg-preview.png?ex=65a8680d&is=6595f30d&hm=737bd43b21535ab466ebad68bfb27031243fdbb73885fa98f5b599a9f9bd4bb5&=&format=webp&quality=lossless')
-                      .setImage(`attachment://${imageInfo.id}.png`)
-                      // .addFields(
-                      //     { name: 'Rarity Score', value: fileInfo.rarity, inline: true },
-                      //     { name: 'Position', value: fileInfo.position, inline: true },
-                      // )
-                      .setURL(assetURL)
-                      .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676' })
-                      .setTimestamp();
-                      message.channel.send({
-                        content: `${message.author} has requested information on ${imageInfo.name}.`,
-                        embeds: [Embed],
-                        files: [{ attachment: imagePath, name: `${imageInfo.id}.png` }],
-                      });
-              } else {
-                  message.channel.send(`${message.author}, file not found. Please provide a valid file number.`);
-              }
+                        const assetURL = `https://nanswap.com/art/assets/${assetData.asset.id}${config.referral}`;
+                        const fields = [
+                            {
+                                name: `__Secure URL:__ ${emoji.Lock}`,
+                                value: `**${imageData[fileNumber].name}:** **[Click To View](${assetURL})**`,
+                                inline: false
+                            },
+                            {
+                                name: '\u200b',
+                                value: `__**General Information:**__ ${emoji.GeneralInfo}`,
+                                inline: false
+                            },
+                            // { 
+                            //     name: '**Asset:**', 
+                            //     value: `**[${imageData[fileNumber].name}](${assetURL})**`, 
+                            //     inline: false 
+                            // },
+                            {
+                                name: `**Owner:** ${emoji.Owner}`,
+                                value: `**[${assetData.asset.ownerId.username || 'UNKNOWN'}](https://nanswap.com/art/${assetData.asset.ownerId.username})**`,
+                                inline: true
+                            },
+                            {
+                                name: `**Rank:** ${emoji.Rank}`,
+                                value: `**${fileInfo.position}**`,
+                                inline: true
+                            },
+                            {
+                                name: `**Listed Price:** ${emoji.Currency}`,
+                                value: `**${assetData.asset.bestAsk ? typeof assetData.asks.priceTicker === 'string' ? assetData.asks.priceTicker : 'Ӿ' : ''}${typeof assetData.asset.bestAsk === 'number' ? assetData.asset.bestAsk : 'Not Listed'}**`,
+                                inline: true
+                            },
+                            {
+                                name: `**Total Views:** ${emoji.Views}`,
+                                value: `**${assetData.asset.views}**`,
+                                inline: true,
+                            },
+                            {
+                                name: `\u200b`,
+                                value: `__**Attributes:**__ ${emoji.Attributes}`,
+                                inline: false
+                            },
+                        ];
+
+                         // Iterate through metadata attributes and add them to the fields array
+                         for (const trait of assetData.asset.metadata.attributes) {
+                            const traitType = trait.trait_type;
+                            const traitValue = trait.value;
+
+                            if (assetData.asset.collectionId.attributes.hasOwnProperty(traitType)) {
+                                const subAttributes = assetData.asset.collectionId.attributes[traitType];
+
+                                if (subAttributes.hasOwnProperty(traitValue)) {
+                                    const subAttributeValue = subAttributes[traitValue];
+                                    const percentageValue = convertToPercentage(subAttributeValue);
+
+                                    const emojiForTrait = getEmojiForTrait(traitType);
+                                    fields.push({
+                                        name: `**${traitType}:** ${emojiForTrait}`,
+                                        value: `\`\`\`${convertToPercentage(traitValue)} ${percentageValue}\`\`\``,
+                                        inline: true,
+                                    });
+                                } else {
+                                    const emojiForTrait = getEmojiForTrait(traitType);
+                                    fields.push({
+                                        name: `**${traitType}:** ${emojiForTrait}`,
+                                        value: `\`\`\`${convertToPercentage(traitValue)}\`\`\``,
+                                        inline: true,
+                                    });
+                                }
+                            } else {
+                                const emojiForTrait = getEmojiForTrait(traitType);
+                                fields.push({
+                                    name: `**${traitType}:** ${emojiForTrait}`,
+                                    value: `\`\`\`${convertToPercentage(traitValue)}\`\`\``,
+                                    inline: true,
+                                });
+                            }
+                        }
+
+                        // Add a disclaimer field
+                        fields.push({
+                            name: `__**Disclaimer:**__`,
+                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`,
+                            inline: false
+                        });
+
+                        // Create an Embed object with the specified details
+                        const Embed = new EmbedBuilder()
+                            .setColor(0x0099FF)
+                            .setTitle(`${emoji.Project} Nyano Cat Information Request`)
+                            .setDescription(`\n\n🙏 Thanks for your request, ${message.author}.\n\n**${emoji.Thumbnail} Click the image thumbnail to see a bigger preview!**\n\n${emoji.Offer} Place a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                            .setThumbnail(`attachment://${imageData[fileNumber].id}.png`)
+                            .addFields(fields)
+                            .setURL(assetURL)
+                            .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: config.embedFooterImage })
+                            .setTimestamp();
+
+                        // Send a message with the Embed and attached image
+                        message.channel.send({
+                            content: `${message.author} has requested information on ${imageData[fileNumber].name}.`,
+                            embeds: [Embed],
+                            files: [{ attachment: imageName, name: `${imageData[fileNumber].id}.png` }],
+                        });
+                    } catch (error) {
+                        consoleError('Error fetching or processing asset data:', error);
+                        message.channel.send(`${message.author}, an error occurred while processing the request.`);
+                    }
+                } else {
+                    message.channel.send(`${message.author}, file not found. Please provide a valid file number.`);
+                }
             }
         }
     },
 };
 
+// Log in to Discord using the bot token from the configuration
 client.login(config.token);
