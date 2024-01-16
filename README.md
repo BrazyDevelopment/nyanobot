@@ -13,7 +13,8 @@ You can now view our official documentation at **https://docs.armour.dev/discord
 1. Invite the bot to your server using **https://nyanobot.armour.dev/invite**
 2. Perform the `!setalerts` command using the Command Usage guide **[here](https://github.com/BrazyDevelopment/nyanobot?tab=readme-ov-file#command-usage)**
 4. You can also use `!info <fileNumber>` in any channel to return information about a specific asset.
-
+5. You can also use `!listed <username>` to show a user's listed assets. (Maximum 20)
+6. You can also use `!top <amount> <username>` to show a user's rarest assets. (Maximum 20)
 
 **SELF INSTALLATION:**
 1. Download the zip files using the green "Code" button above.
@@ -40,7 +41,7 @@ If you're downloading and using the open source version, then you need to config
 
 
 # Sales Alert Preview:
-![Sales Alert Preview](https://i.imgur.com/TJVy58q.png)
+![Sales Alert Preview](https://github.com/BrazyDevelopment/nyanobot/assets/126255356/c67c53d5-bfb1-4b7e-b67e-438dbe3ae17b)
 
 
 # Cool Dude:
