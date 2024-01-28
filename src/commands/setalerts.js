@@ -4,6 +4,7 @@
 const { setChannelToUpdate, setRoleId, resolveRoleMention } = require('../utils.js');
 const { PermissionsBitField } = require('discord.js');
 const { consoleLog, consoleError } = require('../debug.js');
+const { client } = require('./nft_bot.js');
 
 // Define allowed alert types
 const allowedAlertTypes = ['sales', 'listings', 'transfers', 'offers'];
@@ -25,6 +26,7 @@ module.exports = {
             if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)){
                 return message.channel.send('You do not have the required permissions.');
             }
+            
 
             // Continue only if the user has the 'Manage Channels' permission
             if (message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)){

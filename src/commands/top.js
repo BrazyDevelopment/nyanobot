@@ -3,83 +3,17 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const config = require('../config/config.json');
 const emoji = require('../config/emojis.json');
 const { consoleLog } = require('../debug.js');
-const { downloadAndSaveImage } = require('../utils.js');
-const fetch = require('isomorphic-fetch');
+const { fetchUserAllData, client } = require('../nft_bot.js');
+const { downloadAndSaveImage, setClient } = require('../utils.js');
 const fs = require('fs').promises;
 
 // Set up Discord client with specified intents
 const prefix = config.prefix;
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions
-    ],
-});
-
-// Variable to hold the Discord client instance
-let clientInstance;
-
-// Function to set the Discord client instance
-function setClient(client) {
-    clientInstance = client;
-}
-
-// Function to fetch data from the specified API endpoint
-async function fetchData(username) {
-    const assets = [];
-    let page = 0;
-    let hasMoreData = true;
-
-    // Fetch data in paginated manner until there is no more data
-    while (hasMoreData) {
-        const apiUrl = `https://art.nanswap.com/public/collected?username=${username}&page=${page}`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        // If data is available, add to assets and increment page
-        if (data.length > 0) {
-            assets.push(...data);
-            page++;
-        } else {
-            hasMoreData = false;
-        }
-    }
-
-    return assets;
-}
-
-// Function to read and parse CSV file format
-async function readCSV2(filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const parsedData = content
-        .trim()
-        .split('\n')
-        .map((line) => line.split(','))
-        .map(([id, location, name]) => ({ id, location, name }));
-    return parsedData;
-}
-
-// Function to read and parse rarity CSV file format
-async function readRarityCSV(filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const parsedData = content
-        .trim()
-        .split('\n')
-        .map((line) => line.split(','))
-        .map(([fileNumber, rarityScore, position]) => ({
-            fileNumber: parseInt(fileNumber),
-            rarityScore: parseFloat(rarityScore),
-            position: parseInt(position),
-        }));
-    return parsedData;
-}
 
 // Exported module containing the 'top' command
 module.exports = {
     name: 'top',
-    description: 'Display the top Nyano cats for a specific user.',
+    description: 'Display the top Nyano parsedDatas for a specific user.',
     setClient,
 
     // Execute function to handle the 'top' command
@@ -99,118 +33,76 @@ module.exports = {
 
                 // Validate username presence
                 if (!username) {
-                    return message.channel.send('Please provide a username.');
+                    return message.reply('Please provide a username.');
                 }
 
                 // Limit the amount to 20
                 if (amount > 20) {
-                    return message.channel.send(`${message.author}, you have attempted to request more than 20 fields. Please use 20 or less.`);
+                    return message.reply(`${message.author}, you have attempted to request more than 20 fields. Please use 20 or less.`);
                 }
 
-                // Fetch and process data from external APIs and CSV files
-                const parsedDataa = await fetchData(username);
-                const assetsData = await readCSV2('src/data/attributes/assets-id-name.csv');
-                const rarityData = await readRarityCSV('src/data/attributes/rarity.csv');
+               // Fetch and process data from external APIs and CSV files
+                const parsedData = await fetchUserAllData(username, 'mostRare');
 
-                // Process and filter data based on certain conditions
-                const processedData = parsedDataa.map((cat) => {
-                    // Process each cat and match with assets and rarity data
-                    const matchedAsset = assetsData.find((asset) => asset.id === cat.id);
+                // Sort parsedData by rarityScore in descending order
+                const sortedData = parsedData.sort((b, a) => b.rarityRank - a.rarityRank);
 
-                    if (matchedAsset) {
-                        const fileNumberMatch = matchedAsset.name.match(/#(\d+)/);
-
-                        if (fileNumberMatch) {
-                            const fileNumber = parseInt(fileNumberMatch[1]);
-                            const matchedRarity = rarityData.find((rarity) => rarity.fileNumber === fileNumber);
-
-                            if (matchedRarity) {
-                                return {
-                                    id: cat.id,
-                                    name: cat.name,
-                                    bestAsk: cat.bestAsk,
-                                    bestBid: cat.bestBid,
-                                    assetLocation: cat.location,
-                                    rarityPosition: matchedRarity.position,
-                                };
-                            } else {
-                                consoleLog(`No rarity match for asset ${cat.id}, fileNumber ${fileNumber}`);
-                            }
-                        } else {
-                            consoleLog(`Could not extract file number from asset name ${matchedAsset.name}`);
-                        }
-                    } else {
-                        consoleLog(`No asset match for asset ${cat.id}`);
-                    }
-
-                    return null;
-                }).filter((cat) => cat !== null);
-
-                // Sort and select the top cats based on rarity position
-                const sortedData = processedData.sort((a, b) => a.rarityPosition - b.rarityPosition).slice(0, amount);
-
-                // Prepare fields for embedding
-                const fields = sortedData.map((cat, index) => {
+                // Prepare fields for embeddin
+                const fields = sortedData.slice(0, amount).map((data, index) => {
                     // Construct individual field data
-                    const Link = `https://nanswap.com/art/assets/${cat.id}${config.referral}`
+                    const Link = `https://nanswap.com/art/assets/${data.id}${config.referral}`
                     const baseField = {
-                        name: `${index + 1}. **\`${cat.name}\`**`,
-                        value: `${emoji.Rank} **Rank:** \`${cat.rarityPosition}\``,
+                        name: `${index + 1}. **\`${data.name}\`**`,
+                        value: `- ${emoji.Rank} **Rank:** \`${data.rarityRank}\`\n`,
                         inline: true,
                     };
 
                     // Add information based on bid and ask availability
-                    if (!cat.bestBid && cat.bestAsk) {
-                        baseField.value += `\n${emoji.Currency} **Price:** \`Ӿ${cat.bestAsk}\`\n${emoji.Bidder} **Best Bid:** \`N/A\``;
-                    } else if (!cat.bestBid && !cat.bestAsk) {
-                        baseField.value += `\n${emoji.Currency} **Price:** \`N/A\`\n${emoji.Bidder} **Best Bid:** \`N/A\``;
-                    } else if (cat.bestBid && cat.bestAsk) {
-                        baseField.value += `\n${emoji.Currency} **Price:** \`Ӿ${cat.bestAsk}\`\n${emoji.Bidder} **Best Bid:** \`Ӿ${cat.bestBid}\``;
-                    } else if (cat.bestBid && !cat.bestAsk) {
-                        baseField.value += `\n${emoji.Currency} **Price:** \`N/A\`\n${emoji.Bidder} **Best Bid:** \`Ӿ${cat.bestBid}\``;
+                    if (!data.bestBid && data.bestAsk) {
+                        baseField.value += `- ${emoji.Currency} **Price:** \`Ӿ${data.bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** \`N/A\``;
+                    } else if (!data.bestBid && !data.bestAsk) {
+                        baseField.value += `- ${emoji.Currency} **Price:** \`N/A\`\n- ${emoji.Bidder} **Best Bid:** \`N/A\``;
+                    } else if (data.bestBid && data.bestAsk) {
+                        baseField.value += `- ${emoji.Currency} **Price:** \`Ӿ${data.bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** \`Ӿ${data.bestBid}\``;
+                    } else if (data.bestBid && !data.bestAsk) {
+                        baseField.value += `- ${emoji.Currency} **Price:** \`N/A\`\n- ${emoji.Bidder} **Best Bid:** \`Ӿ${data.bestBid}\``;
                     } else {
-                        consoleLog('Unknown State:', cat);
-                    };
+                        consoleLog('Unknown State:', data);
+                    }
 
-                    // Add cat link to the field
-                    baseField.value += `\n${emoji.Lock} **Link:** [View](${Link})`;
+                    // Add parsedData link to the field
+                    baseField.value += `\n- ${emoji.Lock} **Link:** [View](${Link})`;
+
                     return baseField;
-                });
-
-                // Add disclaimer field
-                fields.push({
-                    name: `__**Disclaimer:**__ ${emoji.Disclaimer}`,
-                    value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`,
-                    inline: false,
                 });
 
                 // Check if there is data to display
                 if (sortedData.length > 0) {
                     // Generate image name and download image
-                    const imageName = `${processedData[0].id.replace(' ', '').replace('#', '-')}.png`;
-                    const assetLocation = processedData[0].assetLocation;
+                    const imageName = `${sortedData[0].id.replace(' ', '').replace('#', '-')}.png`;
+                    const assetLocation = sortedData[0].location;
                     await downloadAndSaveImage(assetLocation, imageName);
                     consoleLog(imageName)
-
+                    const collectionName = sortedData[0].placeholderName;
                     // Create and send Discord Embed
                     const Embed = new EmbedBuilder()
                         .setColor(0x0099FF)
-                        .setTitle(`${emoji.Project} Top ${amount} Cats for ${username} on Nanswap Art!`)
-                        .setDescription(`${emoji.GeneralInfo} Here are ${username}'s Top ${amount} collected cats:`)
+                        .setTitle(`${emoji.Project} Top ${amount} ${collectionName} for ${username} on Nanswap Art!`)
+                        .setDescription(`${emoji.GeneralInfo} Here are ${username}'s Top ${amount} collected ${collectionName}:`)
                         .addFields(fields)
                         .setURL(`https://nanswap.com/art/${username}${config.referral}`)
                         .setThumbnail(`attachment://${imageName}`)
                         .setFooter({ text: 'Nyano Bot | Powered by Armour', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676' })
                         .setTimestamp();
 
-                    message.channel.send({
-                        content: `${message.author}, here are the Top ${amount} Nyano Cats in ${username}'s collection.`,
+                    message.reply({
+                        content: `${message.author}, here are the Top ${amount} Nyano ${collectionName} in ${username}'s collection.`,
                         embeds: [Embed],
                         files: [{ attachment: imageName, name: imageName }],
                     });
                 } else {
                     // Inform user if no data found
-                    message.channel.send(`${message.author}, There was no data found for the username: ${username}`);
+                    message.reply(`${message.author}, There was no data found for the username: ${username}`);
                 }
             }
         }
@@ -218,4 +110,4 @@ module.exports = {
 };
 
 // Log in with the provided Discord token
-client.login(config.token);
+// client.login(config.token);

@@ -2,81 +2,23 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const config = require('../config/config.json');
 const emoji = require('../config/emojis.json');
-const { downloadAndSaveImage, readCSV } = require('../utils.js');
+const { downloadAndSaveImage, readCSV, setClient, convertToPercentage, getEmojiForTrait } = require('../utils.js');
 const { consoleLog, consoleError } = require('../debug.js');
-const { fetchDataByApiUrl } = require('../nft_bot.js');
+const { fetchAssetData, client } = require('../nft_bot.js');
+
+// const client = new Client({
+//     intents: [
+//         GatewayIntentBits.Guilds,
+//         GatewayIntentBits.GuildMessages,
+//         GatewayIntentBits.MessageContent,
+//         GatewayIntentBits.GuildMessageReactions,
+//     ],
+// });
 
 // Extract configuration values
 const prefix = config.prefix;
-
-// Create a Discord client instance
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions,
-    ],
-});
-
-let clientInstance;
 const fileData = {};
 const imageData = {};
-
-// Function to set the client instance
-function setClient(client) {
-    clientInstance = client;
-}
-
-// Function to fetch asset data by asset ID
-async function fetchAssetData(assetId) {
-    try {
-        const apiUrl = `https://art.nanswap.com/asset/${assetId}`;
-        return await fetchDataByApiUrl(apiUrl);
-    } catch (error) {
-        consoleError('Error fetching or processing asset data:', error);
-        throw error;
-    }
-}
-
-// Function to convert a numerical value to a percentage
-function convertToPercentage(value) {
-    if (typeof value !== 'number') {
-        return value;
-    }
-    return `${(value / 10).toFixed(1)}%`;
-}
-
-// Function to get emoji based on trait type
-function getEmojiForTrait(traitType) {
-    switch (traitType) {
-        case "Background":
-            return emoji.Background;
-        case "Body":
-            return emoji.Body;
-        case "Collar":
-            return emoji.Collar;
-        case "Costume":
-            return emoji.Costume;
-        case "Exterior":
-            return emoji.Exterior;
-        case "Eyes":
-            return emoji.Eyes;
-        case "Face":
-            return emoji.Face;
-        case "Glasses":
-            return emoji.Glasses;
-        case "Hat":
-            return emoji.Hat;
-        case "Mouth":
-            return emoji.Mouth;
-        case "Stache":
-            return emoji.Stache;
-        // Add more cases for other trait types
-        default:
-            return emoji.Attributes;
-    }
-}
 
 // Export the command module
 module.exports = {
@@ -106,53 +48,50 @@ module.exports = {
                         const fileInfo = fileData[fileNumber];
                         const imageUrl = assetData.asset.location;
                         const imageName = `${assetData.asset.id.replace(' ', '').replace('#', '-')}.png`;
+                        const bestBid = assetData.asset.bestBid;
+                        const bestAsk = assetData.asset.bestAsk;
+                        const rarityRank = assetData.asset.rarityRank;
 
                         // Download and save the image locally
                         await downloadAndSaveImage(imageUrl, imageName);
 
                         const assetURL = `https://nanswap.com/art/assets/${assetData.asset.id}${config.referral}`;
-                        const fields = [
+                        
+                        const fields = [ 
                             {
-                                name: `__Secure URL:__ ${emoji.Lock}`,
-                                value: `**${imageData[fileNumber].name}:** **[Click To View](${assetURL})**`,
+                                name: `${emoji.Lock} __Secure URL:__`,
+                                value: `- **[Click To View](${assetURL})**\n`,
                                 inline: false
                             },
                             {
-                                name: '\u200b',
-                                value: `__**General Information:**__ ${emoji.GeneralInfo}`,
-                                inline: false
-                            },
-                            // { 
-                            //     name: '**Asset:**', 
-                            //     value: `**[${imageData[fileNumber].name}](${assetURL})**`, 
-                            //     inline: false 
-                            // },
-                            {
-                                name: `**Owner:** ${emoji.Owner}`,
-                                value: `**[${assetData.asset.ownerId.username || 'UNKNOWN'}](https://nanswap.com/art/${assetData.asset.ownerId.username})**`,
-                                inline: true
-                            },
-                            {
-                                name: `**Rank:** ${emoji.Rank}`,
-                                value: `**${fileInfo.position}**`,
-                                inline: true
-                            },
-                            {
-                                name: `**Listed Price:** ${emoji.Currency}`,
-                                value: `**${assetData.asset.bestAsk ? typeof assetData.asks.priceTicker === 'string' ? assetData.asks.priceTicker : 'Ӿ' : ''}${typeof assetData.asset.bestAsk === 'number' ? assetData.asset.bestAsk : 'Not Listed'}**`,
-                                inline: true
-                            },
-                            {
-                                name: `**Total Views:** ${emoji.Views}`,
-                                value: `**${assetData.asset.views}**`,
-                                inline: true,
-                            },
-                            {
-                                name: `\u200b`,
-                                value: `__**Attributes:**__ ${emoji.Attributes}`,
+                                name: `\n${emoji.GeneralInfo} __**General Information:**__`,
+                                value: `
+                                - ${emoji.Owner} **Owner: [${assetData.asset.ownerId.username || 'UNKNOWN'}](https://nanswap.com/art/${assetData.asset.ownerId.username})**\n- ${emoji.Rank} **Rank: \`${rarityRank}\`**\n- ${emoji.Views} **Views: \`${assetData.asset.views}\`**`,
                                 inline: false
                             },
                         ];
+
+                        consoleLog(fields[1].value)
+                        
+                        if (!bestBid && bestAsk) {
+                            fields[1].value += `\n- ${emoji.Currency} **Price:** \`Ӿ${bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** \`N/A\``;
+                        } else if (!bestBid && !bestAsk) {
+                            fields[1].value += `\n- ${emoji.Currency} **Price:** \`N/A\`\n- ${emoji.Bidder} **Best Bid:** \`N/A\``;
+                        } else if (bestBid && bestAsk) {
+                            fields[1].value += `\n- ${emoji.Currency} **Price:** \`Ӿ${bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** \`${bestBid}\``;
+                        } else if (bestBid && !bestAsk) {
+                            fields[1].value += `\n- ${emoji.Currency} **Price:** \`${bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** \`N/A\``;
+                        } else {
+                            consoleLog('Unknown State:', assetData.asset);
+                        }
+
+                        fields.push(
+                            {
+                                name: `\n\u200b`,
+                                value: `${emoji.Attributes} __**Attributes:**__`,
+                                inline: false
+                            },
+                        );
 
                          // Iterate through metadata attributes and add them to the fields array
                          for (const trait of assetData.asset.metadata.attributes) {
@@ -168,14 +107,14 @@ module.exports = {
 
                                     const emojiForTrait = getEmojiForTrait(traitType);
                                     fields.push({
-                                        name: `**${traitType}:** ${emojiForTrait}`,
+                                        name: `\`${emojiForTrait}\` **${traitType}:**`,
                                         value: `\`\`\`${convertToPercentage(traitValue)} ${percentageValue}\`\`\``,
                                         inline: true,
                                     });
                                 } else {
                                     const emojiForTrait = getEmojiForTrait(traitType);
                                     fields.push({
-                                        name: `**${traitType}:** ${emojiForTrait}`,
+                                        name: `\`${emojiForTrait}\` **${traitType}:**`,
                                         value: `\`\`\`${convertToPercentage(traitValue)}\`\`\``,
                                         inline: true,
                                     });
@@ -183,25 +122,17 @@ module.exports = {
                             } else {
                                 const emojiForTrait = getEmojiForTrait(traitType);
                                 fields.push({
-                                    name: `**${traitType}:** ${emojiForTrait}`,
+                                    name: `\`${emojiForTrait}\` **${traitType}:**`,
                                     value: `\`\`\`${convertToPercentage(traitValue)}\`\`\``,
                                     inline: true,
                                 });
                             }
                         }
 
-                        // Add a disclaimer field
-                        fields.push({
-                            name: `__**Disclaimer:**__`,
-                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`,
-                            inline: false
-                        });
-
                         // Create an Embed object with the specified details
                         const Embed = new EmbedBuilder()
                             .setColor(0x0099FF)
-                            .setTitle(`${emoji.Project} Nyano Cat Information Request`)
-                            .setDescription(`\n\n🙏 Thanks for your request, ${message.author}.\n\n**${emoji.Thumbnail} Click the image thumbnail to see a bigger preview!**\n\n${emoji.Offer} Place a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                            .setTitle(`${emoji.Project} ${imageData[fileNumber].name}`)
                             .setThumbnail(`attachment://${imageData[fileNumber].id}.png`)
                             .addFields(fields)
                             .setURL(assetURL)
@@ -209,17 +140,17 @@ module.exports = {
                             .setTimestamp();
 
                         // Send a message with the Embed and attached image
-                        message.channel.send({
+                        message.reply({
                             content: `${message.author} has requested information on ${imageData[fileNumber].name}.`,
                             embeds: [Embed],
                             files: [{ attachment: imageName, name: `${imageData[fileNumber].id}.png` }],
                         });
                     } catch (error) {
                         consoleError('Error fetching or processing asset data:', error);
-                        message.channel.send(`${message.author}, an error occurred while processing the request.`);
+                        message.reply(`${message.author}, an error occurred while processing the request.`);
                     }
                 } else {
-                    message.channel.send(`${message.author}, file not found. Please provide a valid file number.`);
+                    message.reply(`${message.author}, file not found. Please provide a valid file number.`);
                 }
             }
         }

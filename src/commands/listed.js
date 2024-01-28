@@ -2,33 +2,18 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const config = require('../config/config.json');
 const emoji = require('../config/emojis.json');
 // const { consoleLog, consoleError } = require('../debug.js');
-const { downloadAndSaveImage } = require('../utils.js');
-const fetch = require('isomorphic-fetch');
+const { downloadAndSaveImage, setClient } = require('../utils.js');
+const { fetchUserListedData, client } = require('../nft_bot.js');
 
 const prefix = config.prefix;
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessageReactions,
-    ],
-});
-
-let clientInstance;
-
-// Function to set the client instance
-function setClient(client) {
-    clientInstance = client;
-}
-
-// Function to fetch listed Nyano cats data by username
-async function fetchData(username) {
-    const apiUrl = `https://art.nanswap.com/public/collected?username=${username}&status=listed&sort=askLowToHigh`;
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-    return data;
-}
+// const client = new Client({
+//     intents: [
+//         GatewayIntentBits.Guilds,
+//         GatewayIntentBits.GuildMessages,
+//         GatewayIntentBits.MessageContent,
+//         GatewayIntentBits.GuildMessageReactions,
+//     ],
+// });
 
 // Export the module
 module.exports = {
@@ -52,11 +37,11 @@ module.exports = {
 
                 // Check if a username is provided
                 if (!username) {
-                    return message.channel.send('Please provide a username.');
+                    return message.reply('Please provide a username.');
                 }
 
                 // Fetch listed Nyano cats data for the provided username
-                const listedData = await fetchData(username);
+                const listedData = await fetchUserListedData(username, `askLowToHigh`);
 
                 // Check if there are listed cats
                 if (listedData.length > 0) {
@@ -72,26 +57,19 @@ module.exports = {
                         const Link = `https://nanswap.com/art/assets/${cat.id}${config.referral}`;
                         const baseField = {
                             name: `${index + 1}. **\`${cat.name}\`**`,
-                            value: `${emoji.Currency} **Price:** \`Ӿ${cat.bestAsk}\`\n${emoji.Bidder} **Best Bid:** ${cat.bestBid ? `\`Ӿ${cat.bestBid}\`` : '\`N/A\`'}`,
+                            value: `- ${emoji.Currency} **Price:** \`Ӿ${cat.bestAsk}\`\n- ${emoji.Bidder} **Best Bid:** ${cat.bestBid ? `\`Ӿ${cat.bestBid}\`` : '\`N/A\`'}`,
                             inline: true,
                         };
 
-                        baseField.value += `\n${emoji.Lock} **Link:** [View](${Link})`;
+                        baseField.value += `\n- ${emoji.Lock} **Link:** [View](${Link})`;
                         return baseField;
-                    });
-
-                    // Add a disclaimer field
-                    fields.push({
-                        name: `__**Disclaimer:**__ ${emoji.Disclaimer}`,
-                        value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`,
-                        inline: false,
                     });
 
                     // Create an Embed for the listed Nyano cats
                     const Embed = new EmbedBuilder()
                         .setColor(0x0099FF)
                         .setTitle(`${emoji.Project} Listed Cats for ${username} on Nanswap Art!`)
-                        .setDescription(`${emoji.GeneralInfo} Here are ${username}'s listed cats:`)
+                        .setDescription(`${emoji.GeneralInfo} Here are ${username}'s 12 cheapest listed cats:`)
                         .addFields(fields)
                         .setURL(`https://nanswap.com/art/${username}${config.referral}`)
                         .setThumbnail(`attachment://${imageName}`)
@@ -99,13 +77,13 @@ module.exports = {
                         .setTimestamp();
 
                     // Send the message with the Embed and attached image
-                    message.channel.send({
-                        content: `${message.author}, here are the listed Nyano Cats in ${username}'s collection.`,
+                    message.reply({
+                        content: `${message.author}, here are the 12 cheapest listed Nyano Cats in ${username}'s collection.`,
                         embeds: [Embed],
                         files: [{ attachment: imageName, name: imageName }],
                     });
                 } else {
-                    message.channel.send(`${message.author}, There are no listed cats found for the username: ${username}`);
+                    message.reply(`${message.author}, There are no listed cats found for the username: ${username}`);
                 }
             }
         }
@@ -113,4 +91,4 @@ module.exports = {
 };
 
 // Login to the Discord client using the provided token
-client.login(config.token);
+// client.login(config.token);

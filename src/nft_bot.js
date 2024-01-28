@@ -9,6 +9,7 @@ const { Client, GatewayIntentBits, ActivityType, EmbedBuilder } = require('disco
 const fs = require('fs');
 const { consoleLog, consoleError } = require('./debug.js');
 const config = require('./config/config.json');
+const fetch = require('isomorphic-fetch');
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -47,7 +48,7 @@ const fetchDataByApiUrl = async (apiUrl) => {
         const data = await response.json();
         return data;
     } catch (error) {
-        consoleError('Error fetching API data:', error);
+        consoleError('Error fetching or processing API data:', error);
         throw error;
     }
 };
@@ -63,12 +64,50 @@ const fetchListingData = async () => {
 const fetchOfferData = async () => {
     return await fetchDataByApiUrl(config.offersApiUrl);
 };
+// Function to fetch listed Nyano cats data by username
+const fetchUserListedData = async (username, sorting) => {
+    const userUrl = `https://art.nanswap.com/public/collected?username=${username}&status=listed&sort=${sorting}`;
+    try {
+        return await fetchDataByApiUrl(userUrl);
+    } catch (error) {
+        consoleError('Error fetching or processing userUrl data:', error);
+        throw error;
+    }
+};
+const fetchUserAllData = async (username, sorting) => {
+    const userUrl = `https://art.nanswap.com/public/collected?username=${username}&sort=${sorting}`;
+    try {
+        return await fetchDataByApiUrl(userUrl);
+    } catch (error) {
+        consoleError('Error fetching or processing userUrl data:', error);
+        throw error;
+    }
+};
+const fetchUserProfileInfo = async (username) => {
+    const userUrl = `https://art.nanswap.com/public/username-info?username=${username}`;
+    try {
+        return await fetchDataByApiUrl(userUrl);
+    } catch (error) {
+        consoleError('Error fetching or processing userUrl data:', error);
+        throw error;
+    }
+};
+// Function to fetch asset data by asset ID
+const fetchAssetData = async (assetId) => {
+    const assetUrl = `https://art.nanswap.com/asset/${assetId}`;
+    try {
+        return await fetchDataByApiUrl(assetUrl);
+    } catch (error) {
+        consoleError('Error fetching or processing asset data:', error);
+        throw error;
+    }
+};
 async function postNewEvents() {
     await postNewSales();
     await postNewTransfers();
     await postNewListings();
     await postNewOffers();
-}
+};
 // End of api stuff
 
 // Main Loop
@@ -214,6 +253,11 @@ client.on("ready", async () => {
     })();
 });
 
+client.on('disconnect', (event) => {
+    console.log(`Disconnected with code ${event.code}, trying to reconnect...`);
+    client.login('YOUR_BOT_TOKEN');
+});
+
 // Function to post new transfers
 async function postNewTransfers() {
     let channelsToUpdates = getChannelToUpdate(transferchannelIdPath);
@@ -240,18 +284,15 @@ async function postNewTransfers() {
                     .setColor(0x0099FF)
                     .setTitle(`${emoji.Project} Nyano Cat Transfer Alert!`)
                     .setDescription(`**${emoji.Transfer} [${transferElement.assetId.name}](${link}) has recently been transferred!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                    
+                    .setDescription(
+                        `**${emoji.Transfer} [${transferElement.assetId.name}](${link}) was recently transferred!**\n\n` +
+                        `**${emoji.Seller} __From User:__ [${fromUsername}](${fromuserLink})**\n` + 
+                        `**${emoji.Buyer} __To User:__ [${toUsername}](${touserLink})**\n` +
+                        `**${emoji.Lock} __Secure URL:__ [View Asset](${link})**`
+                    )   
                     .setURL(link)
                     .setThumbnail('attachment://' + imageName)
-                    .addFields(
-                        { name: `__From User:__ ${emoji.Seller}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: `__To User:__ ${emoji.Buyer}`, value: `**[${toUsername}](${touserLink})**`, inline: true },
-                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: false },
-                        { 
-                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
-                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
-                            inline: false 
-                        },
-                    )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
@@ -265,7 +306,7 @@ async function postNewTransfers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = transferRoleId !== null ? `<@&${transferRoleId}>` : ''
 
-                    await channel.send({ content: `||${mention}||\n**[${transferElement.assetId.name}](${link})** has been transferred to **[${toUsername}](${touserLink})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `${fromUsername} has transferred an asset to ${toUsername}. ||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedTransfers.push(transferElement._id)
                 }
@@ -284,11 +325,11 @@ async function postNewSales() {
 
     try {
         // Fetch API data
-        const apiData = await fetchSalesData();
+        const salesData = await fetchSalesData();
 
         // Extract unique asset IDs from the API data
-        for (let i = 0; i < apiData.length; i++) {
-            const saleElement = apiData[i];
+        for (let i = 0; i < salesData.length; i++) {
+            const saleElement = salesData[i];
             if (!lastProcessedSales.includes(saleElement._id)) {
                 const imageUrl = saleElement.assetId.location;
                 const imageName = saleElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
@@ -304,20 +345,15 @@ async function postNewSales() {
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
                     .setTitle(`${emoji.Project} Nyano Cat Sale Alert!`)
-                    .setDescription(`**${emoji.Sale} [${saleElement.assetId.name}](${link}) was recently sold!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                    .setDescription(
+                        `**${emoji.Sale} [${saleElement.assetId.name}](${link}) was recently sold!**\n\n` +
+                        `**${emoji.Seller} __Seller:__ [${saleElement.fromUserId.username}](${fromuserLink})**\n` + 
+                        `**${emoji.Buyer} __Buyer:__ [${toUsername}](${touserLink})**\n` +
+                        `**${emoji.Currency} __Price:__ \`Ӿ${+saleElement.price}\`**\n` +
+                        `**${emoji.Lock} __Secure URL:__ [View Asset](${link})**`
+                    )                  
                     .setURL(link)
                     .setThumbnail('attachment://' + imageName)
-                    .addFields(
-                        { name: `__Seller:__ ${emoji.Seller}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: `__Buyer:__ ${emoji.Buyer}`, value: `**[${toUsername}](${touserLink})**`, inline: true },
-                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+saleElement.price}**`, inline: true },
-                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
-                        { 
-                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
-                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
-                            inline: false 
-                        },
-                    )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
@@ -331,7 +367,7 @@ async function postNewSales() {
                     let channel = await client.channels.cache.get(channelIdToUpdate)
                     let mention = salesRoleId !== null ? `<@&${salesRoleId}>` : ''
                     
-                    await channel.send({ content: `||${mention}||\n**[${saleElement.assetId.name}](${link})** has been sold to **[${toUsername}](${touserLink})** for **Ӿ${+saleElement.price}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `${saleElement.fromUserId.username} has sold an asset to ${toUsername} for Ӿ${+saleElement.price}. ||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedSales.push(saleElement._id)
                 }
@@ -343,7 +379,6 @@ async function postNewSales() {
 }
 
 // Function to post new listings
-let currentListingsPrices = {};
 async function postNewListings() {
     let channelsToUpdates = getChannelToUpdate(listingchannelIdPath);
     consoleLog({ channelsToUpdates });
@@ -354,33 +389,11 @@ async function postNewListings() {
             const listingElement = listingsData[i];
             const listingId = listingElement._id;
 
-            // // Check if the listing is in the canceled set
-            // if (canceledListings.has(listingId)) {
-            //     consoleLog(`Listing ${listingElement.assetId.name} is marked as canceled. Skipping processing.`);
-            //     continue; // Skip processing this listing and move on to the next one
-            // }
-
             // Check if the listing is recently canceled
             if (listingElement.state === "CANCELED") {
                 consoleLog(`Listing ${listingElement.assetId.name} was recently canceled. Skipping processing.`);
-                // canceledListings.add(listingId);
                 continue;
-            }
-
-            // // Check if the listing exists in the stored prices
-            // if (!currentListingsPrices[listingId]) {
-            //     currentListingsPrices[listingId] = listingElement.price;
-            // }
-
-            // // Check for price changes
-            // if (currentListingsPrices[listingId] !== listingElement.price) {
-            //     // Price has changed, trigger alert
-            //     await sendPriceChangeAlert(listingElement, currentListingsPrices[listingId]);
-            //     // Update the stored price
-            //     currentListingsPrices[listingId] = listingElement.price;
-            //     // break;
-            //     // return;
-            // }
+            };
 
             if (!lastProcessedListings.includes(listingId)) {
                 const imageUrl = listingElement.assetId.location;
@@ -395,36 +408,21 @@ async function postNewListings() {
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
                     .setTitle(`${emoji.Project} Nyano Cat Listing Alert!`)
-                    .setDescription(`**${emoji.Listing} [${listingElement.assetId.name}](${link}) was recently listed!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                    .setDescription(`**${emoji.Listing} [${listingElement.assetId.name}](${link}) was recently listed!\n\n${emoji.Seller} __Seller:__ [${listingElement.fromUserId.username}](${fromuserLink})\n${emoji.Currency} __Price:__ \`Ӿ${+listingElement.price}\`\n${emoji.Status} __Status:__  \`${listingElement.state}\`\n${emoji.Lock} __Secure URL:__ [View Asset](${link})**`)
                     .setURL(link)
                     .setThumbnail(`attachment://` + imageName)
-                    .addFields(
-                        { name: `__Seller:__ ${emoji.Seller}`, value: `**[${listingElement.fromUserId.username}](${fromuserLink})**`, inline: true },
-                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+listingElement.price}**`, inline: true },
-                        { name: `__Status:__ ${emoji.Status}`, value: `**${listingElement.state}**`, inline: true },
-                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
-                        { 
-                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
-                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
-                            inline: false 
-                        },
-                    )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
-
 
                 for (let i = 0; i < channelsToUpdates.length; i++) {
                     const channelIdToUpdate = channelsToUpdates[i].channelId;
                     const guildId = channelsToUpdates[i].guildId;
                     const listingroleId = getRoleId(listingsroleIdsPath, guildId);
-
                     consoleLog('Channel to update:', channelsToUpdates[i]);
                     consoleLog('Fetching channel ID from file:', listingchannelIdPath);
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = listingroleId !== null ? `<@&${listingroleId}>` : '';
-
-                    await channel.send({ content: `||${mention}||\n**[${listingElement.fromUserId.username}](${fromuserLink})** has just listed **[${listingElement.assetId.name}](${link})** for **Ӿ${+listingElement.price}**.`, embeds: [Embed], files: [{ attachment: imageName }] });
-
+                    await channel.send({ content: `${listingElement.fromUserId.username} has just listed a new asset for Ӿ${+listingElement.price}. ||${mention}||`, embeds: [Embed], files: [{ attachment: imageName }] });
                     lastProcessedListings.push(listingElement._id);
                 }
             }
@@ -443,7 +441,12 @@ async function postNewOffers() {
 
         for (let i = 0; i < offersData.length; i++) {
             const offerElement = offersData[i];
-            if (!lastProcessedOffers.includes(offerElement._id)) {
+            const offerId = offerElement._id;
+            if (offerElement.state === "CANCELED") {
+                consoleLog(`Offer: ${offerId} on ${offerElement.assetId.name} was recently canceled. Skipping processing.`);
+                continue;
+            };
+            if (!lastProcessedOffers.includes(offerId)) {
                 const imageUrl = offerElement.assetId.location;
                 const imageName = offerElement.assetId.id.replace(' ', '').replace('#', '-') + '.png';
 
@@ -452,24 +455,17 @@ async function postNewOffers() {
                 let link = 'https://nanswap.com/art/assets/' + offerElement.assetId.id + config.referral;
                 const fromUsername = offerElement.fromUserId.username === undefined ? 'Unnamed' : offerElement.fromUserId.username;
                 let fromuserLink = 'https://nanswap.com/art/' + fromUsername + config.referral;
+                const ownerUsername = offerElement.assetId.ownerId.username === undefined ? 'Unnamed' : offerElement.assetId.ownerId.username;
+                let ownerLink = 'https://nanswap.com/art/' + ownerUsername + config.referral;
                 
                 const Embed = new EmbedBuilder()
                     .setColor(0x0099FF)
                     .setTitle(`${emoji.Project} Nyano Cat Offer Alert!`)
-                    .setDescription(`**${emoji.Offer} [${offerElement.assetId.name}](${link}) has recently received an offer!**\n\n**Click the image thumbnail to see a bigger preview!**\n\nPlace a bid using the __**Secure URL**__ ${emoji.Lock} below.\n\u200b`)
+                    .setDescription(
+                        `**${emoji.Offer} [${offerElement.assetId.name}](${link}) has received an offer!\n\n${emoji.Owner} __Owner:__ [${ownerUsername}](${ownerLink})\n${emoji.Bidder} __Bidder:__ [${fromUsername}](${fromuserLink})\n${emoji.Currency} __Price:__ \`Ӿ${+offerElement.price}\`\n${emoji.Status} __Status:__ \`${offerElement.state}\`\n${emoji.Lock} __Secure URL:__ [View Asset](${link})**`
+                    )   
                     .setURL(link)
                     .setThumbnail(`attachment://` + imageName)
-                    .addFields(
-                        { name: `__Bidder:__ ${emoji.Bidder}`, value: `**[${fromUsername}](${fromuserLink})**`, inline: true },
-                        { name: `__Price:__ ${emoji.Currency}`, value: `**Ӿ${+offerElement.price}**`, inline: true },
-                        { name: `__Status:__ ${emoji.Status}`, value: `**${offerElement.state}**`, inline: true },
-                        { name: `__Secure URL:__ ${emoji.Lock}`, value: `**[View Asset](${link})**`, inline: true },
-                        { 
-                            name: `__**Disclaimer:**__ ${emoji.Disclaimer}`, 
-                            value: `Protect yourself from any potential phishing links!\nUse <@1190753163318407289> to stay protected. ${emoji.NyanoBot}`, 
-                            inline: false 
-                        },
-                    )
                     .setFooter({ text: 'Nyano Bot | Powered by Armour Hosting', iconURL: 'https://media.discordapp.net/attachments/1083342379513290843/1126321603224014908/discordsmall.png?ex=659f423c&is=658ccd3c&hm=1c648f3554786855f83494c2f162f3acc4003ce6083995b301c83d1e2402c10a&=&format=webp&quality=lossless&width=676&height=676', url: 'https://discord.js.org' })
                     .setTimestamp();
 
@@ -483,20 +479,20 @@ async function postNewOffers() {
                     let channel = await client.channels.cache.get(channelIdToUpdate);
                     let mention = offerroleId !== null ? `<@&${offerroleId}>` : '';
 
-                    await channel.send({ content: `||${mention}||\n**[${fromUsername}](${fromuserLink})** has offered **Ӿ${+offerElement.price}** for **[${offerElement.assetId.name}](${link})**.`, embeds: [Embed], files: [{ attachment: imageName }] });
+                    await channel.send({ content: `${fromUsername} has offered Ӿ${+offerElement.price} for ${offerElement.assetId.name}. ||${mention}||\n`, embeds: [Embed], files: [{ attachment: imageName }] });
 
                     lastProcessedOffers.push(offerElement._id);
                 }
             }
         }
     } catch (error) {
-        consoleError('Error fetching or posting offers:', error);
+        consoleError('Error fetching or posting offers:', error.message);
     }
 }
 
 // Exports
 module.exports = {
-    fetchDataByApiUrl,
+    fetchDataByApiUrl: fetchDataByApiUrl,
     fetchSalesData: async () => {
         return await fetchDataByApiUrl(config.salesApiUrl);
     },
@@ -509,6 +505,43 @@ module.exports = {
     fetchOfferData: async () => {
         return await fetchDataByApiUrl(config.offersApiUrl);
     },
+    fetchAssetData: async (assetId) => {
+        try {
+            const apiUrl = `https://art.nanswap.com/asset/${assetId}`;
+            return await fetchDataByApiUrl(apiUrl);
+        } catch (error) {
+            consoleError('Error fetching or processing asset data:', error);
+            throw error;
+        }
+    },
+    fetchUserListedData: async (username, sorting) => {
+        try {
+            const userUrl = `https://art.nanswap.com/public/collected?username=${username}&status=listed&sort=${sorting}`;
+            return await fetchDataByApiUrl(userUrl);
+        } catch (error) {
+            consoleError('Error fetching or processing asset data:', error);
+            throw error;
+        }
+    },
+    fetchUserAllData: async (username, sorting) => {
+        try {
+            const userUrl = `https://art.nanswap.com/public/collected?username=${username}&sort=${sorting}`;
+            return await fetchDataByApiUrl(userUrl);
+        } catch (error) {
+            consoleError('Error fetching or processing asset data:', error);
+            throw error;
+        }
+    },
+    fetchUserProfileInfo: async (username) => {
+        const userUrl = `https://art.nanswap.com/public/username-info?username=${username}`;
+        try {
+            return await fetchDataByApiUrl(userUrl);
+        } catch (error) {
+            consoleError('Error fetching or processing userUrl data:', error);
+            throw error;
+        }
+    },
+    client: client,
 };
 
 // Login Client via Token
