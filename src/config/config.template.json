@@ -10,13 +10,13 @@
 
     "__comment2__": "URL/API Links",
 
-    "salesApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=sales",
-    "transfersApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=transfer",
-    "listingsApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=listing",
-    "offersApiUrl": "https://art.nanswap.com/asset/history/collection/Nyano-Cats?page=0&type=offer",
-    "serverurl": "https://discord.gg/nyano",
-    "redditurl": "https://www.reddit.com/r/nyano/",
-    "xurl": "https://x.com/NyanoCatsNFT",
+    "salesApiUrl": "https://art.nanswap.com/asset/history/collection/",
+    "transfersApiUrl": "https://art.nanswap.com/asset/history/collection/",
+    "listingsApiUrl": "https://art.nanswap.com/asset/history/collection/",
+    "offersApiUrl": "https://art.nanswap.com/asset/history/collection/",
+    "serverurl": "https://discord.gg/",
+    "redditurl": "https://www.reddit.com/r/",
+    "xurl": "https://x.com/",
 
     
     "__comment3__": "Embed Settings",
