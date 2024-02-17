@@ -1,0 +1,6 @@
+.gitignore
+src/config/config.json
+*.png
+/node_modules
+logs
+src/data
