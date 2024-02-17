@@ -1,3 +1,4 @@
+.gitignore
 config/config.json
 *.png
 /node_modules
